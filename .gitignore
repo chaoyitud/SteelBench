@@ -1,0 +1,45 @@
+**/__pycache__/
+
+**/log/
+**/stats/
+**/results_model/
+**/CONTRIBUTING.assets
+
+# Data and large files
+data/
+nohup.out
+*.log
+
+# Results and generated outputs
+results/logs/
+results/logs_full/
+results/paper_outputs/
+results/mitra_rerun*.log
+results/full_eval_run*.log
+results/classical_eval.log
+results/full_results*.csv
+results/smoke_test_results*.csv
+
+# Model checkpoints and weights
+TALENT/model/models/models_limix/
+TALENT/model/models/models_mitra/
+TALENT/model/models/models_tabpfn/
+*.cpkt
+*.ckpt
+
+# Python packaging
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo

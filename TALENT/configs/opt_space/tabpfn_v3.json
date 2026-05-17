@@ -1,0 +1,9 @@
+{
+    "tabpfn_v3": {
+        "model": {},
+        "training": {},
+        "general": {
+            "sample_size": 1000000
+        }
+    }
+}
