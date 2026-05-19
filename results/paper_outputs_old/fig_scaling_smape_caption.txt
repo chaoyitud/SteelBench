@@ -1,0 +1,4 @@
+SMAPE (\%) as a function of training-data fraction for all models on the
+four prediction tasks. Lines show the mean across five random seeds;
+shaded bands show $\pm$1 standard deviation. Mitra (\dag) is deterministic
+for dataset sizes below 8,192 samples and therefore has no error band.

@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrrr}
+\toprule
+Model & Steel YS & Steel UTS & Steel EL & Matbench YS & NIMS FS \\
+\midrule
+\multicolumn{6}{l}{\textit{TFM}} \\
+TabPFN-3 & $5.58\pm0.04$ & $4.06\pm0.03$ & \textbf{$20.96\pm0.12$} & \underline{$5.31\pm0.04$} & \textbf{$2.23\pm0.03$} \\
+LimiX & $5.64\pm0.11$ & $4.42\pm0.06$ & $22.31\pm0.15$ & \textbf{$5.26\pm0.05$} & \underline{$2.34\pm0.03$} \\
+TabPFN v2 & $5.31\pm0.02$ & \textbf{$3.81\pm0.04$} & \underline{$22.22\pm0.15$} & $5.37\pm0.06$ & $2.52\pm0.04$ \\
+Mitra$\dag$ & \textbf{$4.88\pm0.00$} & $4.10\pm0.00$ & $23.67\pm0.00$ & $6.05\pm0.00$ & $3.23\pm0.00$ \\
+\midrule
+\multicolumn{6}{l}{\textit{Deep}} \\
+TabM & $7.93\pm1.97$ & $10.86\pm0.10$ & $23.24\pm0.41$ & $12.56\pm0.07$ & $3.73\pm0.07$ \\
+FT-Transformer & $6.80\pm0.66$ & $10.19\pm0.11$ & $23.16\pm0.66$ & $12.27\pm0.16$ & $4.04\pm1.31$ \\
+RealMLP & $6.65\pm0.26$ & $5.30\pm0.64$ & $25.98\pm0.63$ & $6.79\pm0.84$ & $3.17\pm0.20$ \\
+ModernNCA & $6.21\pm0.56$ & $4.88\pm0.35$ & $23.34\pm1.21$ & $6.92\pm0.84$ & $3.81\pm0.43$ \\
+ResNet & $8.59\pm0.23$ & $4.38\pm0.22$ & $25.45\pm1.08$ & $6.31\pm0.16$ & $2.92\pm0.19$ \\
+MLP & $8.99\pm0.24$ & $5.36\pm0.26$ & $24.63\pm0.58$ & $8.44\pm1.01$ & $3.16\pm0.28$ \\
+\midrule
+\multicolumn{6}{l}{\textit{Classical}} \\
+CatBoost & \underline{$5.27\pm0.14$} & \underline{$4.00\pm0.18$} & $24.64\pm0.56$ & $6.47\pm0.24$ & $2.77\pm0.16$ \\
+LightGBM & $6.58\pm0.01$ & $5.88\pm0.01$ & $24.15\pm0.02$ & $6.55\pm0.00$ & $3.42\pm0.00$ \\
+XGBoost & $6.13\pm0.14$ & $4.95\pm0.41$ & $25.36\pm0.74$ & $6.72\pm0.50$ & $3.28\pm0.17$ \\
+\midrule
+\multicolumn{6}{l}{\footnotesize $\dag$ Deterministic; std\,=\,0. $\ddag$ MAE from Dunn~et~al.~(2020).} \\
+\bottomrule
+\end{tabular}
+}
+\caption{Benchmark SMAPE (\%) on open-source datasets at 70\% training fraction. Bold = best, underline = second-best per column.}
+\end{table}

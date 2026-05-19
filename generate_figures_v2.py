@@ -64,15 +64,15 @@ CLS_MODELS  = ["catboost", "lightgbm", "xgboost"]
 # ── Target metadata ───────────────────────────────────────────────────────────
 
 TARGET_META = {
-    "RM":          dict(label="UTS", long="Tensile Strength",        unit="MPa", dataset="Tata Steel",     group="UTS"),
-    "RP":          dict(label="YS",  long="Yield Strength",          unit="MPa", dataset="Tata Steel",     group="YS"),
-    "AVG_TS":      dict(label="UTS", long="Tensile Strength",        unit="MPa", dataset="Outokumpu",      group="UTS"),
-    "AVG_YS":      dict(label="YS",  long="Yield Strength",          unit="MPa", dataset="Outokumpu",      group="YS"),
-    "YS":          dict(label="YS",  long="Yield Strength",          unit="MPa", dataset="Steel Strength", group="YS"),
-    "UTS":         dict(label="UTS", long="Tensile Strength",        unit="MPa", dataset="Steel Strength", group="UTS"),
-    "EL":          dict(label="EL",  long="Elongation",              unit="%",   dataset="Steel Strength", group="EL"),
-    "MATBENCH_YS": dict(label="YS",  long="Yield Strength",          unit="MPa", dataset="Matbench-steels", group="YS"),
-    "FS":          dict(label="FS",  long="Fatigue Endurance Limit", unit="MPa", dataset="NIMS Fatigue",   group="FS"),
+    "RM":          dict(label="UTS",           long="Tensile Strength",         unit="MPa", dataset="Tata",     group="UTS"),
+    "RP":          dict(label="YS",            long="Yield Strength",           unit="MPa", dataset="Tata",     group="YS"),
+    "AVG_TS":      dict(label="UTS",           long="Tensile Strength",         unit="MPa", dataset="Outo",     group="UTS"),
+    "AVG_YS":      dict(label="YS",            long="Yield Strength",           unit="MPa", dataset="Outo",     group="YS"),
+    "YS":          dict(label="YS",            long="Yield Strength",           unit="MPa", dataset="Steel",    group="YS"),
+    "UTS":         dict(label="UTS",           long="Tensile Strength",         unit="MPa", dataset="Steel",    group="UTS"),
+    "EL":          dict(label="EL",            long="Elongation",               unit="%",   dataset="Steel",    group="EL"),
+    "MATBENCH_YS": dict(label="YS",            long="Yield Strength",           unit="MPa", dataset="Matbench", group="YS"),
+    "FS":          dict(label="Fatigue limit", long="Fatigue Endurance Limit",  unit="MPa", dataset="NIMS",     group="FS"),
 }
 
 
@@ -156,35 +156,6 @@ def savefig(fig, path):
     print("  Saved", path)
 
 
-def pareto_frontier(times, smapes):
-    """Lower-left Pareto frontier (lower time AND lower SMAPE is better).
-    Returns (x_list, y_list) or ([], []) if fewer than 2 non-dominated points."""
-    pairs = sorted(zip(times, smapes), key=lambda p: p[0])
-    pareto, best = [], float("inf")
-    for t, s in pairs:
-        if s < best:
-            pareto.append((t, s))
-            best = s
-    if len(pareto) < 2:
-        return [], []
-    xs, ys = zip(*pareto)
-    return list(xs), list(ys)
-
-
-def apply_family_colors_cd(ax):
-    """Post-draw: colour CD diagram text labels by model family, strip title."""
-    name_to_key = {v["name"]: k for k, v in MODEL_STYLE.items()}
-    for txt in ax.texts:
-        raw = txt.get_text().split(" (")[0].rstrip("\u2020")
-        key = name_to_key.get(raw)
-        if key:
-            txt.set_color(FAM_COLORS[MODEL_STYLE[key]["fam"]])
-            if key in ("tabpfn_v3", "limix"):
-                txt.set_fontweight("bold")
-                txt.set_fontsize(txt.get_fontsize() + 0.5)
-    ax.set_title("")
-
-
 def _rank_matrix(df, configs, models):
     """Build rank matrix (n_configs x n_models), rank 1=best SMAPE."""
     rows = []
@@ -236,7 +207,7 @@ def _draw_dual_bar_panel(ax, task_df, sorted_models, target_key,
             continue
         st    = MODEL_STYLE.get(m, {})
         color = st.get("color", "#888")
-        hatch = "//" if m == "mitra" else None   # A1-2 — lighter hatch
+        hatch = "///" if m == "mitra" else None
         # SMAPE bar on bottom axis
         ax.barh(i - bar_h / 2, sv, xerr=se, height=bar_h,
                 color=color, hatch=hatch, edgecolor="white", linewidth=0.4,
@@ -287,7 +258,7 @@ def _draw_scaling_curves(ax, df, src, tgt, models, metric="SMAPE",
         ]["%s_mean" % metric].min()
         if np.isfinite(best_cls_80):
             ax.axhline(best_cls_80, color="#888888", lw=0.9, ls="--",
-                       label="Best classical @ 80%", zorder=0)
+                       label="Best classical @ 80%%", zorder=0)
 
     for m in models:
         st  = MODEL_STYLE.get(m, {})
@@ -329,60 +300,35 @@ def _draw_time_scatter_panel(ax, task_df, models, mitra_time=0.5, metric="SMAPE"
         row = task_df[task_df["model"] == m]
         if not len(row):
             continue
-        val     = row["%s_mean" % metric].values[0]
-        val_std = row["%s_std" % metric].values[0] if "%s_std" % metric in row.columns else 0.0
-        # G6 — use actual Mitra time if recorded (>=0.5 s); fall back to floor
-        if m == "mitra":
-            raw_t = row["Time_mean"].values[0]
-            time  = raw_t if raw_t >= 0.5 else mitra_time
-        else:
-            time = row["Time_mean"].values[0]
-        time_std = row["Time_std"].values[0] if "Time_std" in row.columns else 0.0
-        st    = MODEL_STYLE.get(m, {})
-        color = st["color"]
-        ax.scatter(time, val, color=color, marker=st["marker"],
+        val  = row["%s_mean" % metric].values[0]
+        time = row["Time_mean"].values[0] if m != "mitra" else mitra_time
+        st   = MODEL_STYLE.get(m, {})
+        ax.scatter(time, val, color=st["color"], marker=st["marker"],
                    s=55, edgecolors="white", linewidths=0.5, zorder=4)
-        # A5-2 — error bars
-        ax.errorbar(time, val, xerr=time_std or None, yerr=val_std or None,
-                    fmt="none", ecolor=color, elinewidth=0.6,
-                    capsize=1.5, alpha=0.4, zorder=3)
-        points.append((time, val, st["name"], color))
+        points.append((time, val, st["name"], st["color"]))
 
-    # G4 — robust Pareto frontier (lower-left, excluding Mitra)
-    non_mitra_t = [t for t, s, n, _ in points if "\u2020" not in n]
-    non_mitra_s = [s for t, s, n, _ in points if "\u2020" not in n]
-    if len(non_mitra_t) >= 2:
-        px, py = pareto_frontier(non_mitra_t, non_mitra_s)
-        if px:
-            ax.plot(px, py, color="#888888", lw=1.0, ls="--", zorder=2)
+    # Pareto frontier (lower-left, excluding Mitra)
+    non_mitra = [(t, s) for t, s, n, _ in points if "\u2020" not in n]
+    pareto_pts = sorted(non_mitra, key=lambda x: x[0])
+    pareto, min_s = [], np.inf
+    for t, s in pareto_pts:
+        if s < min_s:
+            pareto.append((t, s))
+            min_s = s
+    if len(pareto) > 1:
+        px, py = zip(*pareto)
+        ax.plot(px, py, color="#888888", lw=1.0, ls="--", zorder=2)
 
     try:
         from adjustText import adjust_text
-        texts = [ax.text(t, s, nm, fontsize=4.5, color=c, ha="left", va="bottom")
+        texts = [ax.text(t, s, nm, fontsize=5.0, color=c)
                  for t, s, nm, c in points]
-        adjust_text(
-            texts, ax=ax,
-            expand_points=(1.6, 1.6),
-            expand_text=(1.4, 1.4),
-            force_points=(0.4, 0.6),
-            force_text=(0.3, 0.5),
-            lim=500,
-            arrowprops=dict(arrowstyle="-", color="#aaaaaa", lw=0.5),
-        )
+        adjust_text(texts, ax=ax,
+                    arrowprops=dict(arrowstyle="-", color="#aaa", lw=0.4))
     except Exception:
-        # Quadrant-based fallback: push labels away from point
-        if points:
-            xvals = [max(t, 1e-9) for t, s, n, c in points]
-            xmed  = float(np.median(np.log10(xvals)))
-            yvals = [s for t, s, n, c in points]
-            ymed  = float(np.median(yvals))
-        else:
-            xmed, ymed = 0.0, 0.0
         for t, s, nm, c in points:
-            dx = 5 if np.log10(max(t, 1e-9)) < xmed else -5
-            dy = 3 if s < ymed else -6
-            ax.annotate(nm, (t, s), fontsize=4.5, color=c,
-                        xytext=(dx, dy), textcoords="offset points")
+            ax.annotate(nm, (t, s), fontsize=5.0, color=c,
+                        xytext=(3, 2), textcoords="offset points")
     ax.set_xscale("log")
     return points
 
@@ -404,16 +350,14 @@ def _draw_ribbon_panel(ax, df, src, tgt, models, metric="SMAPE"):
                 if len(row):
                     vals.append(row["%s_mean" % metric].values[0])
             if vals:
-                arr = np.array(vals)
-                mins_list.append(float(np.percentile(arr, 25)))   # G3 — Q1
-                maxs_list.append(float(np.percentile(arr, 75)))   # G3 — Q3
-                meds_list.append(float(np.median(arr)))
+                mins_list.append(min(vals))
+                maxs_list.append(max(vals))
+                meds_list.append(float(np.median(vals)))
                 xs_list.append(frac)
         if not xs_list:
             continue
-        alpha = 0.35 if fam == "Classical" else 0.20  # A9-2
         ax.fill_between(xs_list, mins_list, maxs_list,
-                        color=color, alpha=alpha, label="%s IQR" % fam)
+                        color=color, alpha=0.20, label="%s range" % fam)
         ax.plot(xs_list, meds_list, color=color, lw=1.6, ls="-",
                 label="%s median" % fam)
 
@@ -518,16 +462,16 @@ def _build_cd_diagram(df, configs, models, outdir, suffix="private"):
         ax.set_yticklabels(names)
         ax.set_xlabel("Average rank")
 
-    # G2 — colour labels by family, strip dagger before matching, remove title
     for txt in ax.texts:
-        raw = txt.get_text().split(" (")[0].rstrip("\u2020")
+        raw = txt.get_text().split(" (")[0]
         mk  = next((k for k, v in MODEL_STYLE.items() if v["name"] == raw), None)
         if mk:
             txt.set_color(FAM_COLORS[MODEL_STYLE[mk]["fam"]])
             if mk in ("tabpfn_v3", "limix"):
                 txt.set_fontweight("bold")
-                txt.set_fontsize(txt.get_fontsize() + 0.5)
-    ax.set_title("")  # G2 — title goes to LaTeX caption only
+
+    ax.set_title("CD diagram (%s)  Friedman chi2=%.2f  p=%.4f" % (suffix, stat, p),
+                 fontsize=8)
     fig.tight_layout()
     out_pdf  = "%s/fig_%s_cd_diagram.pdf" % (outdir, "priv_A6" if suffix == "private" else "open_B3")
     savefig(fig, out_pdf)
@@ -571,7 +515,7 @@ def fig_A1_tata_bar(df, outdir):
                 lim_m = max(lim_m, row["MAE_mean"].values[0]   + row["MAE_std"].values[0])
     lim_s *= 1.35; lim_m *= 1.35
 
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 5.5))
+    fig, axes = plt.subplots(1, 2, figsize=(9.0, 6.5))
     for ax, (src, tgt) in zip(axes, tasks):
         task_df = _get_task(df, src, tgt, 70)
         _draw_dual_bar_panel(ax, task_df, sorted_models, tgt,
@@ -582,61 +526,11 @@ def fig_A1_tata_bar(df, outdir):
     mae_patch   = mpatches.Patch(facecolor="#bbbbbb", edgecolor="#555555",
                                   hatch="...", label="MAE (top axis)")
     fam_patches = _family_legend_patches()
-    # A1-3 — structured legend: families + metric patches
-    legend_elements = [
-        mpatches.Patch(facecolor=FAM_COLORS["TFM"],       label="TFM"),
-        mpatches.Patch(facecolor=FAM_COLORS["Deep"],      label="Deep"),
-        mpatches.Patch(facecolor=FAM_COLORS["Classical"], label="Classical"),
-        mpatches.Patch(facecolor="#555555",               label="SMAPE (bottom axis)"),
-        mpatches.Patch(facecolor="#aaaaaa", hatch="//",   label="MAE (top axis)"),
-    ]
-    fig.legend(handles=legend_elements, loc="lower center",
-               ncol=5, fontsize=7, framealpha=0.9,
-               bbox_to_anchor=(0.5, -0.04))
+    handles     = fam_patches + [smape_patch, mae_patch]
+    fig.legend(handles=handles, loc="lower center", ncol=5,
+               bbox_to_anchor=(0.5, -0.02), framealpha=0.9)
     fig.tight_layout()
     savefig(fig, "%s/fig_priv_A1_tata_bar.pdf" % outdir)
-
-
-def fig_A1b_outo_bar(df, outdir):
-    """A1b — Dual-metric bar chart: Outo UTS + YS at 70% (mirrors fig_A1)."""
-    print("  A1b Outo dual-metric bar chart...")
-    tasks   = [("Outo", "AVG_TS"), ("Outo", "AVG_YS")]
-    priv_df = df[df["tier"] == "private"]
-    models  = models_present(priv_df)
-    # A1-1 — sort by Tata UTS (same global order as fig_A1)
-    tata_uts = _get_task(df, "Tata", "RM", 70)
-    sorted_models = (_sort_models_by_smape(tata_uts, models) if len(tata_uts)
-                     else _sort_models_by_smape(_get_task(df, "Outo", "AVG_TS", 70), models))
-
-    lim_s, lim_m = 0.0, 0.0
-    for src, tgt in tasks:
-        td = _get_task(df, src, tgt, 70)
-        for m in sorted_models:
-            row = td[td["model"] == m]
-            if len(row):
-                lim_s = max(lim_s, row["SMAPE_mean"].values[0] + row["SMAPE_std"].values[0])
-                lim_m = max(lim_m, row["MAE_mean"].values[0]   + row["MAE_std"].values[0])
-    lim_s *= 1.35; lim_m *= 1.35
-
-    fig, axes = plt.subplots(1, 2, figsize=(7.2, 5.5))
-    for ax, (src, tgt) in zip(axes, tasks):
-        task_df = _get_task(df, src, tgt, 70)
-        _draw_dual_bar_panel(ax, task_df, sorted_models, tgt,
-                             smape_lim=lim_s, mae_lim=lim_m)
-
-    smape_patch = mpatches.Patch(color="#555555", label="SMAPE (bottom axis)")
-    mae_patch   = mpatches.Patch(facecolor="#aaaaaa", hatch="//", label="MAE (top axis)")
-    legend_elements = [
-        mpatches.Patch(facecolor=FAM_COLORS["TFM"],       label="TFM"),
-        mpatches.Patch(facecolor=FAM_COLORS["Deep"],      label="Deep"),
-        mpatches.Patch(facecolor=FAM_COLORS["Classical"], label="Classical"),
-        smape_patch, mae_patch,
-    ]
-    fig.legend(handles=legend_elements, loc="lower center",
-               ncol=5, fontsize=7, framealpha=0.9,
-               bbox_to_anchor=(0.5, -0.04))
-    fig.tight_layout()
-    savefig(fig, "%s/fig_priv_A1b_outo_bar.pdf" % outdir)
 
 
 def fig_A2_tata_scaling(df, outdir):
@@ -653,9 +547,11 @@ def fig_A2_tata_scaling(df, outdir):
             _draw_scaling_curves(ax, df, src, tgt, models, metric=metric, ref_line=True)
             ax.set_title(panel_title(tgt), fontsize=9, fontweight="bold")
 
-    # A2-1 — column labels with consistent em-dash format
+    # Column labels
     for col, (_, tgt) in enumerate(tasks):
-        axes[0][col].set_title(panel_title(tgt), fontsize=9, fontweight="bold")
+        meta = TARGET_META[tgt]
+        axes[0][col].set_title("%s: %s (%s)" % (meta["dataset"], meta["long"], meta["label"]),
+                               fontsize=9, fontweight="bold")
 
     # Shared legend
     hs, ls = axes[0][0].get_legend_handles_labels()
@@ -696,32 +592,20 @@ def fig_A3_tfm_advantage(df, outdir):
             best_cls = priv[(priv["source"] == src) & (priv["target"] == tgt) &
                             (priv["train_pct"] == frac) &
                             (priv["model_family"] == "Classical")]["SMAPE_mean"].min()
-            # A3-1 — relative improvement (%)
-            if np.isfinite(best_tfm) and np.isfinite(best_cls) and best_cls > 0:
-                deltas.append((best_cls - best_tfm) / best_cls * 100)
-            else:
-                deltas.append(0.0)
+            deltas.append(float(best_cls - best_tfm))
         offset = (ti - n_tgts / 2 + 0.5) * width
         bars = ax.bar(x + offset, deltas, width=width * 0.9, color=color, label=lbl)
-        ax.text(x[0] + offset, deltas[0] + 0.2,
-                "%+.1f%%" % deltas[0], ha="center", va="bottom",
+        ax.text(x[0] + offset, deltas[0] + 0.01,
+                "%+.2f" % deltas[0], ha="center", va="bottom",
                 fontsize=5.0, color=color)
 
     ax.axhline(0, color="#888888", lw=0.8, ls="--")
     ax.set_xticks(x)
     ax.set_xticklabels(["%d%%" % f for f in fracs])
     ax.set_xlabel("Training fraction")
-    # A3-1 — updated y-axis label for relative improvement
-    ax.set_ylabel("Relative SMAPE improvement\nof best TFM over best classical (%)")
-    ax.set_title("TFM vs. Classical: relative improvement", fontsize=9)
-    # A3-2 — colour legend swatches
-    legend_handles = [
-        mpatches.Patch(color="#053061", label="Tata UTS"),
-        mpatches.Patch(color="#2166ac", label="Tata YS"),
-        mpatches.Patch(color="#d6604d", label="Outo UTS"),
-        mpatches.Patch(color="#b2182b", label="Outo YS"),
-    ]
-    ax.legend(handles=legend_handles, loc="upper right", fontsize=7)
+    ax.set_ylabel("SMAPE advantage (%)")
+    ax.set_title("TFM vs. Classical SMAPE advantage", fontsize=9)
+    ax.legend(fontsize=6, loc="upper right")
     fig.tight_layout()
     savefig(fig, "%s/fig_priv_A3_tfm_advantage.pdf" % outdir)
 
@@ -795,12 +679,7 @@ def fig_A4_heatmap(df, outdir):
             ax.axhline(sep + 0.5, color="#aaaaaa", lw=0.8)
 
     plt.colorbar(im, ax=ax, label="Rank (1 = best)", shrink=0.7)
-    ax.set_title("")   # A4-1 — title goes to LaTeX caption
-    # A4-2 — Mitra footnote
-    fig.text(0.01, 0.01,
-             r'$\dagger$ Mitra is deterministic for $N_{\mathrm{train}}<8{,}192$; '
-             'std = 0 by design.',
-             fontsize=6, ha='left', va='bottom', transform=fig.transFigure)
+    ax.set_title("Model ranking by SMAPE — industrial tasks", fontsize=9)
     fig.tight_layout()
     savefig(fig, "%s/fig_priv_A4_heatmap.pdf" % outdir)
 
@@ -816,7 +695,7 @@ def fig_A5_time_scatter(df, outdir):
 
     ax.set_xlabel("Inference time (s, log scale)")
     ax.set_ylabel(axis_label("RM", "SMAPE"))
-    ax.set_title("Accuracy vs. efficiency (Tata UTS, 70%)", fontsize=9)  # G1
+    ax.set_title("Accuracy vs efficiency (Tata UTS, 70%%)", fontsize=9)
     ax.legend(handles=_family_legend_patches(), loc="lower right", fontsize=6)
     fig.tight_layout()
     savefig(fig, "%s/fig_priv_A5_time_scatter.pdf" % outdir)
@@ -845,7 +724,7 @@ def fig_A7_full_scaling_atlas(df, outdir):
     ]
     metrics = ["SMAPE", "MAE"]
 
-    fig, axes = plt.subplots(4, 2, figsize=(7.2, 9.0), sharey=False)
+    fig, axes = plt.subplots(4, 2, figsize=(10.0, 12.0), sharey=False)
 
     for row_idx, (src, tgt) in enumerate(tasks):
         for col_idx, metric in enumerate(metrics):
@@ -994,7 +873,7 @@ def fig_A10_time_scatter_all_tasks(df, outdir):
                 tmin = min(tmin, t * 0.7)
                 tmax = max(tmax, t * 1.5)
 
-    fig, axes = plt.subplots(2, 2, figsize=(7.0, 5.5), sharey=False)
+    fig, axes = plt.subplots(2, 2, figsize=(7.0, 6.5), sharey=False)
     axes_flat = axes.flatten()
 
     for idx, (src, tgt, lbl) in enumerate(tasks):
@@ -1032,34 +911,8 @@ def fig_A11_time_dual_metric(df, outdir):
         _draw_time_scatter_panel(ax, task_df, models, metric=metric)
         ax.set_xlabel("Inference time (s)")
         ax.set_ylabel(axis_label("RM", metric))
-        ax.set_title("Tata Steel \u2014 UTS: %s vs inference time" % metric, fontsize=9)  # A11-3
+        ax.set_title("Tata UTS 70%% — %s vs time" % metric, fontsize=9)
         ax.set_xlim(xlim)
-
-    # A11-2 — annotate models that change rank by >=2 between SMAPE and MAE
-    smape_vals, mae_vals, time_vals, mnames = [], [], [], []
-    for m in models:
-        row = task_df[task_df["model"] == m]
-        if not len(row): continue
-        smape_vals.append(row["SMAPE_mean"].values[0])
-        mae_vals.append(row["MAE_mean"].values[0])
-        raw_t = row["Time_mean"].values[0]
-        time_vals.append(raw_t if m != "mitra" or raw_t >= 0.5 else 0.5)
-        mnames.append(m)
-    if len(smape_vals) >= 2:
-        smape_ranks = pd.Series(smape_vals).rank()
-        mae_ranks   = pd.Series(mae_vals).rank()
-        rank_delta  = (mae_ranks - smape_ranks).abs()
-        for i, m in enumerate(mnames):
-            if rank_delta.iloc[i] >= 2:
-                t = time_vals[i]
-                axes[1].annotate(
-                    "rank %d\u2192%d" % (int(smape_ranks.iloc[i]), int(mae_ranks.iloc[i])),
-                    xy=(t, mae_vals[i]),
-                    xytext=(t * 1.5, mae_vals[i]),
-                    fontsize=5.0, color="#444444",
-                    arrowprops=dict(arrowstyle="->", lw=0.6, color="#888888",
-                                    shrinkA=5, shrinkB=3),
-                )
 
     fig.legend(handles=_family_legend_patches(), loc="lower center", ncol=3,
                bbox_to_anchor=(0.5, -0.04), framealpha=0.9)
@@ -1120,28 +973,18 @@ def fig_B1_open_bar(df, outdir):
         return ls * 1.35, lm * 1.35
 
     steel_ls, steel_lm = _row_lims(steel_tasks) if steel_tasks else (None, None)
-    # B1-1 — shared limits for non-steel tasks
-    other_ls, other_lm = _row_lims(other_tasks) if other_tasks else (None, None)
 
-    fig, axes = plt.subplots(nrows, ncols, figsize=(10.5, 4.0 * nrows))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(14.0, 4.5 * nrows))
     axes_flat = np.array(axes).flatten()
 
     for idx, (src, tgt, lbl) in enumerate(available):
         ax = axes_flat[idx]
         task_df = _get_task(open_df, src, tgt, 70)
-        # B1-3 — consistent panel titles via panel_title()
-        ptitle = panel_title(tgt) if tgt in TARGET_META else lbl
         if src == "steel_strength":
-            if tgt == "EL":
-                # B1-2 — EL is in %; don't share MPa-scaled MAE limit
-                _draw_dual_bar_panel(ax, task_df, sorted_models, tgt,
-                                     smape_lim=steel_ls, title=ptitle)
-            else:
-                _draw_dual_bar_panel(ax, task_df, sorted_models, tgt,
-                                     smape_lim=steel_ls, mae_lim=steel_lm, title=ptitle)
-        else:
             _draw_dual_bar_panel(ax, task_df, sorted_models, tgt,
-                                 smape_lim=other_ls, mae_lim=other_lm, title=ptitle)
+                                 smape_lim=steel_ls, mae_lim=steel_lm, title=lbl)
+        else:
+            _draw_dual_bar_panel(ax, task_df, sorted_models, tgt, title=lbl)
 
     for idx in range(len(available), len(axes_flat)):
         axes_flat[idx].set_visible(False)
@@ -1197,15 +1040,6 @@ def fig_B3_open_cd(df, outdir):
                for frac in fracs
                if len(_get_task(open_df, src, tgt, frac)) > 0]
     _build_cd_diagram(open_df, configs, models, outdir, suffix="open")
-    # B3-1 — write caption text file
-    cap = ("Nemenyi-Friedman CD diagram for open-source benchmark tasks "
-           "(Steel YS, Steel UTS, Matbench YS, NIMS Fatigue) at 50/60/70/80\\%% training. "
-           "Models not connected by a clique differ significantly (p<0.05). "
-           "Colours denote model family: "
-           "\\textcolor{TFMblue}{TFM}, \\textcolor{Deepred}{Deep}, "
-           "\\textcolor{Classicalgreen}{Classical}.")
-    with open("%s/fig_open_B3_cd_caption.txt" % outdir, "w") as _f:
-        _f.write(cap + "\n")
 
 
 def fig_B4_steel_strength_scaling(df, outdir):
@@ -1220,7 +1054,7 @@ def fig_B4_steel_strength_scaling(df, outdir):
     ]
     metrics = ["SMAPE", "MAE"]
 
-    fig, axes = plt.subplots(3, 2, figsize=(7.0, 6.5), sharey=False)
+    fig, axes = plt.subplots(3, 2, figsize=(7.0, 7.5), sharey=False)
 
     for row_idx, (src, tgt, lbl) in enumerate(targets):
         for col_idx, metric in enumerate(metrics):
@@ -1235,11 +1069,10 @@ def fig_B4_steel_strength_scaling(df, outdir):
                             va="center", ha="center")
         if tgt == "EL":
             for col_idx in range(2):
-                # B4-1 — move annotation to top-left
                 axes[row_idx][col_idx].text(
-                    0.03, 0.97, "N~200 (missing values dropped)",
+                    0.97, 0.97, "N~200 (missing values dropped)",
                     transform=axes[row_idx][col_idx].transAxes,
-                    fontsize=5.5, va="top", ha="left",
+                    fontsize=5.5, va="top", ha="right",
                     bbox=dict(boxstyle="round,pad=0.2", fc="lightyellow", ec="#ccc", lw=0.5)
                 )
 
@@ -1248,10 +1081,8 @@ def fig_B4_steel_strength_scaling(df, outdir):
     for h, lbl_ in zip(hs, ls_):
         if lbl_ not in seen:
             uh.append(h); ul.append(lbl_); seen.add(lbl_)
-    # B4-2 — wider legend, more columns, slightly higher anchor
-    fig.subplots_adjust(bottom=0.12)
-    fig.legend(uh, ul, loc="lower center", ncol=7,
-               bbox_to_anchor=(0.5, 0.01), fontsize=6, framealpha=0.9)
+    fig.legend(uh, ul, loc="lower center", ncol=5,
+               bbox_to_anchor=(0.5, -0.02), fontsize=5.5, framealpha=0.9)
     fig.tight_layout()
     savefig(fig, "%s/fig_open_B4_steel_strength_scaling.pdf" % outdir)
 
@@ -1263,19 +1094,16 @@ def fig_B5_matbench_vs_steel_ys(df, outdir):
     models  = models_present(open_df)
     fracs   = [50, 60, 70, 80]
     datasets = [
-        ("steel_strength",  "YS",          "Steel Str. (13 wt% features)", "-",  "filled"),  # B5 G1
+        ("steel_strength",  "YS",          "Steel Str. (13 wt%% features)", "-",  "filled"),
         ("matbench_steels", "MATBENCH_YS", "Matbench (132 Magpie feat.)",   "--", "open"),
     ]
     metrics = ["SMAPE", "MAE"]
 
-    # B5-1 — only show top-4 representative models
-    SHOW_MODELS_B5 = ['tabpfn_v3', 'limix', 'tabpfn_v2', 'lightgbm']
     fig, axes = plt.subplots(1, 2, figsize=(7.0, 4.0), sharey=False)
 
     for ax, metric in zip(axes, metrics):
-        ax_vals = []
         for src, tgt, lbl, ls, mstyle in datasets:
-            for m in [m for m in models if m in SHOW_MODELS_B5]:
+            for m in models:
                 st    = MODEL_STYLE.get(m, {})
                 color = st["color"]
                 mfc   = color if mstyle == "filled" else "none"
@@ -1287,7 +1115,6 @@ def fig_B5_matbench_vs_steel_ys(df, outdir):
                         ys.append(row["%s_mean" % metric].values[0])
                         xs.append(frac)
                 if not xs: continue
-                ax_vals.extend(ys)
                 full_lbl = None if m != models[0] else "%s" % lbl
                 if m == "mitra":
                     ax.axhline(float(np.mean(ys)), color=color, ls=ls, lw=1.2,
@@ -1295,10 +1122,6 @@ def fig_B5_matbench_vs_steel_ys(df, outdir):
                 else:
                     ax.plot(xs, ys, color=color, ls=ls, lw=1.2, marker=st["marker"],
                             ms=3.5, mfc=mfc, label=full_lbl)
-        # B5-2 — clip y-axis at 95th percentile to suppress outliers
-        if ax_vals:
-            cap95 = np.percentile(ax_vals, 95) * 1.15
-            ax.set_ylim(bottom=0, top=cap95)
 
         ax.set_xticks(fracs)
         ax.set_xticklabels(["%d%%" % f for f in fracs])
@@ -1356,9 +1179,7 @@ def fig_B6_nims_scaling(df, outdir):
     for h, lbl_ in zip(hs, ls_):
         if lbl_ not in seen:
             uh.append(h); ul.append(lbl_); seen.add(lbl_)
-    # B6-1 — move legend below
-    fig.subplots_adjust(right=0.99, bottom=0.22)
-    fig.legend(uh, ul, loc="lower center", bbox_to_anchor=(0.5, 0.01), ncol=4,
+    fig.legend(uh, ul, loc="center left", bbox_to_anchor=(1.0, 0.5),
                fontsize=6, framealpha=0.9)
     fig.tight_layout()
     savefig(fig, "%s/fig_open_B6_nims_scaling.pdf" % outdir)
@@ -1387,7 +1208,7 @@ def fig_B7_time_scatter_open(df, outdir):
                 tmin = min(tmin, t * 0.6)
                 tmax = max(tmax, t * 2.0)
 
-    fig, axes = plt.subplots(2, 2, figsize=(7.0, 5.5), sharey=False)
+    fig, axes = plt.subplots(2, 2, figsize=(7.0, 6.5), sharey=False)
     axes_flat = axes.flatten()
 
     for idx, (src, tgt, lbl) in enumerate(tasks):
@@ -1447,10 +1268,9 @@ def fig_C1_comparison(df, outdir):
     rm_data = _get_task(df, "Tata", "RM", 70)
     sorted_models = _sort_models_by_smape(rm_data, models)
 
-    # C1-2 — fix panel selection: row1 uses Outo UTS instead of Outo YS
-    row1 = [("Tata", "RM",     panel_title("RM")),
-            ("Outo", "AVG_TS", panel_title("AVG_TS")),
-            ("Tata", "RP",     panel_title("RP"))]
+    row1 = [("Tata", "RM",          "Tata UTS"),
+            ("Tata", "RP",          "Tata YS"),
+            ("Outo", "AVG_YS",      "Outo YS")]
     row2 = [("steel_strength",  "YS",          "Steel YS"),
             ("matbench_steels", "MATBENCH_YS", "Matbench YS"),
             ("nims_fatigue",    "FS",          "NIMS Fatigue")]
@@ -1594,10 +1414,17 @@ def fig_C3_time_scatter_full(df, outdir):
     # Shared x-limits across all panels
     all_tasks = priv_tasks + open_tasks
     models    = models_present(df)
-    # C3/G5 — fixed x-limits across all panels
-    tmin, tmax = 0.3, 500
+    tmin, tmax = np.inf, 0
+    for src, tgt, _ in all_tasks:
+        td = _get_task(df, src, tgt, 70)
+        for m in models:
+            row = td[td["model"] == m]
+            if len(row):
+                t = row["Time_mean"].values[0] if m != "mitra" else 0.5
+                tmin = min(tmin, t * 0.6)
+                tmax = max(tmax, t * 2.0)
 
-    fig, axes = plt.subplots(2, 4, figsize=(12.0, 5.5), sharey=False)
+    fig, axes = plt.subplots(2, 4, figsize=(14.0, 8.0), sharey=False)
 
     bg_colors = {"priv": "#eef4fb", "open": "#fff8f0"}
     for row_idx, (task_list, tier_key) in enumerate([(priv_tasks, "priv"),
@@ -1663,7 +1490,7 @@ def fig_C4_mae_heatmap(df, outdir):
     mae_sorted  = mae_matrix[sort_idx, :]
     norm_sorted = norm_m[sort_idx, :]
 
-    fig, ax = plt.subplots(figsize=(10.0, 4.5))
+    fig, ax = plt.subplots(figsize=(12.0, 5.0))
     im = ax.imshow(norm_sorted, aspect="auto",
                    cmap=plt.get_cmap("YlOrRd"), vmin=0, vmax=1,
                    interpolation="nearest")
@@ -1673,7 +1500,7 @@ def fig_C4_mae_heatmap(df, outdir):
             val = mae_sorted[i, j]
             if np.isnan(val): continue
             ax.text(j, i, "%.1f" % val, ha="center", va="center",
-                    fontsize=5.5, color="white" if norm_sorted[i, j] < 0.35 else "black")  # C4-3
+                    fontsize=5.5, color="white" if norm_sorted[i, j] > 0.7 else "black")
 
     # Vertical separator after industrial tasks (4 tasks)
     ax.axvline(3.5, color="white", lw=2)
@@ -1683,11 +1510,6 @@ def fig_C4_mae_heatmap(df, outdir):
     col_labels = [lbl for _, _, lbl in all_tasks]
     ax.set_xticks(range(n_tasks))
     ax.set_xticklabels(col_labels, rotation=30, ha="right", fontsize=7)
-    # C4-1 — annotate EL column with (%) to signal unit is percent not MPa
-    el_idx = next((j for j, (_, t, _) in enumerate(all_tasks) if t == "EL"), None)
-    if el_idx is not None:
-        ax.text(el_idx, -0.65, "(%)", ha="center", va="bottom", fontsize=6,
-                color="#555555", transform=ax.get_xaxis_transform())
     ax.set_yticks(range(n_models))
     ax.set_yticklabels([MODEL_STYLE.get(m, {}).get("name", m) for m in sorted_m], fontsize=7)
 
@@ -1698,7 +1520,7 @@ def fig_C4_mae_heatmap(df, outdir):
             ax.axhline(sep + 0.5, color="#aaaaaa", lw=0.8)
 
     plt.colorbar(im, ax=ax, label="Normalised MAE (within-task, 0=best)", shrink=0.6)
-    ax.set_title("MAE (MPa) across all benchmark tasks at 70% training fraction", fontsize=9)  # C4/G1
+    ax.set_title("MAE (MPa) across all benchmark tasks at 70%% training fraction", fontsize=9)
     # Group labels above
     ax.text(1.5, -1.2, "Industrial", ha="center", va="bottom",
             fontsize=8, fontweight="bold", transform=ax.transData)
@@ -1812,16 +1634,16 @@ def table_tata(df, outdir):
         all_tasks.append((src, tgt, frac, metrics, d, r))
 
     col_header = ("Model & "
-                  "UTS SMAPE (\\%) & UTS MAE (MPa) & "
-                  "YS SMAPE (\\%) & YS MAE (MPa) \\\\")
+                  "UTS SMAPE (\\%%) & UTS MAE (MPa) & "
+                  "YS SMAPE (\\%%) & YS MAE (MPa) \\\\")
     rows = _model_rows_tex(df, models, all_tasks)
     rows += ["\\midrule",
              "\\multicolumn{5}{l}{\\footnotesize $\\dag$ Deterministic at "
              "inference ($N<8{,}192$); std\\,=\\,0 by design.} \\\\"]
 
-    caption = ("Benchmark results on Tata Steel at 70\\% training fraction. "
+    caption = ("Benchmark results on Tata Steel at 70\\%% training fraction. "
                "Bold = best, underline = second-best per column. "
-               "SMAPE in \\%; MAE in MPa.")
+               "SMAPE in \\%%; MAE in MPa.")
     _write_table(rows, col_header, caption, "%s/table_main_results.tex" % outdir, n_cols=4)
 
 
@@ -1837,16 +1659,16 @@ def table_outo(df, outdir):
         all_tasks.append((src, tgt, frac, metrics, d, r))
 
     col_header = ("Model & "
-                  "UTS SMAPE (\\%) & UTS MAE (MPa) & "
-                  "YS SMAPE (\\%) & YS MAE (MPa) \\\\")
+                  "UTS SMAPE (\\%%) & UTS MAE (MPa) & "
+                  "YS SMAPE (\\%%) & YS MAE (MPa) \\\\")
     rows = _model_rows_tex(df, models, all_tasks)
     rows += ["\\midrule",
              "\\multicolumn{5}{l}{\\footnotesize $\\dag$ Deterministic; "
              "std\\,=\\,0.} \\\\"]
 
-    caption = ("Benchmark results on Outokumpu Steel at 70\\% training fraction. "
+    caption = ("Benchmark results on Outokumpu Steel at 70\\%% training fraction. "
                "Bold = best, underline = second-best per column. "
-               "SMAPE in \\%; MAE in MPa.")
+               "SMAPE in \\%%; MAE in MPa.")
     _write_table(rows, col_header, caption, "%s/table_outo_main.tex" % outdir, n_cols=4)
 
 
@@ -1869,7 +1691,7 @@ def table_open(df, outdir):
         d, r = _build_data_ranks(open_df, src, tgt, frac, models, mets)
         all_tasks.append((src, tgt, frac, mets, d, r))
         for mt in mets:
-            unit = "\\%" if mt == "SMAPE" else "MPa"
+            unit = "\\%%" if mt == "SMAPE" else "MPa"
             col_parts.append("%s %s (%s)" % (lbl, mt, unit))
 
     n_cols     = len(col_parts) - 1
@@ -1891,8 +1713,8 @@ def table_open(df, outdir):
              "$\\dag$ Deterministic; std\\,=\\,0. "
              "$\\ddag$ MAE from Dunn~et~al.~(2020).} \\\\" % (n_cols + 1)]
 
-    caption = ("Benchmark results on open-source datasets at 70\\% training fraction. "
-               "Bold = best, underline = second-best per column. SMAPE in \\%; MAE in MPa.")
+    caption = ("Benchmark results on open-source datasets at 70\\%% training fraction. "
+               "Bold = best, underline = second-best per column. SMAPE in \\%%; MAE in MPa.")
     _write_table(rows, col_header, caption, "%s/table_open_results.tex" % outdir, n_cols=n_cols)
 
 
@@ -1923,7 +1745,7 @@ def table_scaling_appendix(df, outdir):
 
     frac_header = ""
     for _ in all_tasks:
-        frac_header += " & 50\\% & 60\\% & 70\\% & 80\\%"
+        frac_header += " & 50\\%% & 60\\%% & 70\\%% & 80\\%%"
     frac_header += " \\\\"
 
     n_priv_cols = len(priv_tasks) * len(fracs)
@@ -1969,7 +1791,7 @@ def table_scaling_appendix(df, outdir):
         "\\bottomrule",
         "\\end{tabular}",
         "}",
-        "\\caption{SMAPE (\\%, mean$\\pm$std) across all training fractions. "
+        "\\caption{SMAPE (\\%%, mean$\\pm$std) across all training fractions. "
         "Left block: industrial. Right block: open-source.}",
         "\\end{table*}",
     ]
@@ -2000,7 +1822,6 @@ def main():
     if args.stream in ("A", "all"):
         print("\n── Stream A: Industrial ──────────────────────")
         fig_A1_tata_bar(df, args.outdir)
-        fig_A1b_outo_bar(df, args.outdir)
         fig_A2_tata_scaling(df, args.outdir)
         fig_A3_tfm_advantage(df, args.outdir)
         fig_A4_heatmap(df, args.outdir)

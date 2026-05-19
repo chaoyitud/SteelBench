@@ -1,0 +1,36 @@
+\begin{table*}[t]
+\centering
+\caption{Benchmark results at 50\% training fraction (5 seeds, mean\,$\pm$\,std). \textbf{Bold}: best; \underline{underline}: second best per column. MAE in MPa; SMAPE in \%. $^\dagger$Mitra is deterministic for $N<8{,}192$; std\,=\,0 by design.}
+\label{tab:main_50}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lcccccccc}
+\toprule
+ & \multicolumn{2}{c}{$R_m$ (UTS)} & \multicolumn{2}{c}{$R_p$ (YS)} & \multicolumn{2}{c}{AVG\_TS} & \multicolumn{2}{c}{AVG\_YS} \\
+\cmidrule(lr){2-3}
+\cmidrule(lr){4-5}
+\cmidrule(lr){6-7}
+\cmidrule(lr){8-9}
+Model & SMAPE\,(\%)\,$\downarrow$ & MAE\,(MPa)\,$\downarrow$ & SMAPE\,(\%)\,$\downarrow$ & MAE\,(MPa)\,$\downarrow$ & SMAPE\,(\%)\,$\downarrow$ & MAE\,(MPa)\,$\downarrow$ & SMAPE\,(\%)\,$\downarrow$ & MAE\,(MPa)\,$\downarrow$ \\
+\midrule
+\multicolumn{9}{l}{\textit{Tabular Foundation Models}} \\
+TabPFN-3 & $\mathbf{1.31 \pm 0.00}$ & $\mathbf{5.53 \pm 0.01}$ & $\underline{3.95 \pm 0.01}$ & $\underline{11.57 \pm 0.02}$ & $\underline{0.86 \pm 0.00}$ & $\underline{5.79 \pm 0.03}$ & $\underline{1.80 \pm 0.00}$ & $\underline{7.44 \pm 0.01}$ \\
+LimiX & $\underline{1.33 \pm 0.00}$ & $\underline{5.63 \pm 0.01}$ & $\mathbf{3.92 \pm 0.01}$ & $\mathbf{11.48 \pm 0.01}$ & $\mathbf{0.82 \pm 0.00}$ & $\mathbf{5.52 \pm 0.03}$ & $\mathbf{1.73 \pm 0.01}$ & $\mathbf{7.17 \pm 0.04}$ \\
+TabPFN v2 & $1.36 \pm 0.00$ & $5.75 \pm 0.00$ & $4.06 \pm 0.00$ & $11.88 \pm 0.00$ & $1.03 \pm 0.01$ & $7.09 \pm 0.03$ & $1.89 \pm 0.01$ & $7.85 \pm 0.04$ \\
+Mitra† & $1.50 \pm 0.00$ & $6.32 \pm 0.00$ & $4.36 \pm 0.00$ & $12.74 \pm 0.00$ & $1.47 \pm 0.00$ & $9.88 \pm 0.00$ & $2.87 \pm 0.00$ & $11.98 \pm 0.00$ \\
+\midrule
+\multicolumn{9}{l}{\textit{Deep Learning Baselines}} \\
+TabM & $1.52 \pm 0.01$ & $6.38 \pm 0.03$ & $4.22 \pm 0.02$ & $12.36 \pm 0.06$ & $1.60 \pm 0.02$ & $10.77 \pm 0.13$ & $2.88 \pm 0.01$ & $11.96 \pm 0.06$ \\
+FT-Transformer & $1.46 \pm 0.02$ & $6.15 \pm 0.06$ & $4.23 \pm 0.02$ & $12.38 \pm 0.06$ & $1.36 \pm 0.19$ & $9.17 \pm 1.33$ & $2.67 \pm 0.03$ & $10.99 \pm 0.13$ \\
+RealMLP & $1.49 \pm 0.02$ & $6.29 \pm 0.08$ & $4.22 \pm 0.02$ & $12.36 \pm 0.05$ & $1.15 \pm 0.03$ & $7.74 \pm 0.21$ & $2.37 \pm 0.06$ & $9.76 \pm 0.26$ \\
+ModernNCA & $1.76 \pm 0.04$ & $7.42 \pm 0.18$ & $4.29 \pm 0.04$ & $12.55 \pm 0.13$ & $1.14 \pm 0.05$ & $7.68 \pm 0.34$ & $2.13 \pm 0.04$ & $8.78 \pm 0.16$ \\
+ResNet & $1.48 \pm 0.02$ & $6.24 \pm 0.07$ & $4.23 \pm 0.03$ & $12.34 \pm 0.08$ & $1.38 \pm 0.03$ & $9.35 \pm 0.19$ & $2.70 \pm 0.03$ & $11.26 \pm 0.13$ \\
+MLP & $1.45 \pm 0.01$ & $6.13 \pm 0.03$ & $4.19 \pm 0.03$ & $12.26 \pm 0.08$ & $1.44 \pm 0.02$ & $9.78 \pm 0.18$ & $2.80 \pm 0.06$ & $11.73 \pm 0.29$ \\
+\midrule
+\multicolumn{9}{l}{\textit{Classical Methods}} \\
+CatBoost & $1.44 \pm 0.03$ & $6.08 \pm 0.13$ & $4.15 \pm 0.04$ & $12.14 \pm 0.12$ & $1.25 \pm 0.04$ & $8.44 \pm 0.24$ & $2.40 \pm 0.09$ & $9.90 \pm 0.35$ \\
+LightGBM & $1.51 \pm 0.00$ & $6.35 \pm 0.00$ & $4.22 \pm 0.00$ & $12.33 \pm 0.00$ & $1.04 \pm 0.00$ & $6.98 \pm 0.00$ & $1.99 \pm 0.00$ & $8.25 \pm 0.00$ \\
+XGBoost & $1.58 \pm 0.03$ & $6.63 \pm 0.15$ & $4.40 \pm 0.05$ & $12.86 \pm 0.13$ & $1.10 \pm 0.01$ & $7.39 \pm 0.08$ & $2.16 \pm 0.03$ & $8.91 \pm 0.12$ \\
+\bottomrule
+\multicolumn{9}{l}{$^\dagger$Deterministic at inference time for $N<8{,}192$; std\,=\,0 by design.} \\
+\end{tabular}}
+\end{table*}

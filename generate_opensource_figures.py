@@ -97,20 +97,20 @@ PRIVATE_TASKS = [
     ("Outo",  "AVG_YS", "Outo AVG_YS"),
 ]
 
-# ── Open-source task display order ────────────────────────────────────────────
+# ── Open-source task display order (for OS-1 comparison figure, 4 panels) ────
 OPEN_TASKS = [
-    ("steel_strength",  "YS",  "Steel str. YS"),
-    ("nims_fatigue",    "FS",  "NIMS Fatigue"),
-    ("nims_fatigue",    "UTS", "NIMS UTS"),
-    ("nims_fatigue",    "HV",  "NIMS Hardness"),
+    ("steel_strength",  "YS",  "Steel-str YS"),
+    ("steel_strength",  "UTS", "Steel-str UTS"),
+    ("nims_fatigue",    "FS",  "NIMS Fatigue Str."),
+    ("matbench_steels", "YS",  "Matbench YS"),
 ]
 
 # All open-source tasks (for scaling figure)
 OPEN_TASKS_ALL = [
     ("steel_strength",  "YS",  "Steel-str YS"),
     ("steel_strength",  "UTS", "Steel-str UTS"),
-    ("nims_fatigue",    "FS",  "NIMS FS"),
-    ("nims_fatigue",    "HV",  "NIMS HV"),
+    ("nims_fatigue",    "FS",  "NIMS Fatigue Str."),
+    ("matbench_steels", "YS",  "Matbench YS"),
 ]
 
 OPEN_TASK_COLS = {
@@ -124,8 +124,6 @@ OPEN_TASK_COLS = {
     },
     "nims_fatigue": {
         "FS":  "NIMS Fatigue Strength",
-        "UTS": "NIMS Tensile Strength",
-        "HV":  "NIMS Vickers Hardness",
     },
 }
 
@@ -441,8 +439,6 @@ def make_table_open_results(df: pd.DataFrame, outpath: str):
         ("steel_strength",  "UTS", "UTS"),
         ("steel_strength",  "EL",  "EL"),
         ("nims_fatigue",    "FS",  "FS"),
-        ("nims_fatigue",    "UTS", "UTS"),
-        ("nims_fatigue",    "HV",  "HV"),
         ("matbench_steels", "YS",  "YS"),
     ]
 

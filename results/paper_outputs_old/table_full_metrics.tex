@@ -1,0 +1,35 @@
+\begin{table*}[t]
+\centering
+\caption{Full benchmark results at 70\% training fraction (5 seeds, mean~$\pm$~std). \textbf{Bold}: best; \underline{underline}: second best. MAE/RMSE in MPa; SMAPE in \%.}
+\label{tab:full_metrics}
+\scalebox{0.72}{%
+\begin{tabular}{lcccccccccccc}
+\toprule
+ & \multicolumn{3}{c}{$R_m$} & \multicolumn{3}{c}{$R_p$} & \multicolumn{3}{c}{AVG\_TS} & \multicolumn{3}{c}{AVG\_YS} \\
+\cmidrule(lr){2-4}
+\cmidrule(lr){5-7}
+\cmidrule(lr){8-10}
+\cmidrule(lr){11-13}
+Model & MAE$\downarrow$ & $R^2\uparrow$ & SMAPE$\downarrow$ & MAE$\downarrow$ & $R^2\uparrow$ & SMAPE$\downarrow$ & MAE$\downarrow$ & $R^2\uparrow$ & SMAPE$\downarrow$ & MAE$\downarrow$ & $R^2\uparrow$ & SMAPE$\downarrow$ \\
+\midrule
+\multicolumn{13}{l}{\textit{Tabular Foundation Models}} \\
+LimiX & $\underline{5.28 \pm 0.02}$ & $\underline{0.94 \pm 0.00}$ & $\underline{1.24 \pm 0.00}$ & $\underline{11.19 \pm 0.01}$ & $\underline{0.74 \pm 0.00}$ & $\underline{3.81 \pm 0.00}$ & $\mathbf{5.23 \pm 0.03}$ & $\mathbf{0.92 \pm 0.00}$ & $\mathbf{0.78 \pm 0.00}$ & $\underline{6.74 \pm 0.03}$ & $\mathbf{0.98 \pm 0.00}$ & $\underline{1.64 \pm 0.01}$ \\
+TabPFN v2 & $5.36 \pm 0.00$ & $0.94 \pm 0.00$ & $1.26 \pm 0.00$ & $11.59 \pm 0.01$ & $0.73 \pm 0.00$ & $3.95 \pm 0.00$ & $6.84 \pm 0.01$ & $0.78 \pm 0.00$ & $0.99 \pm 0.00$ & $7.23 \pm 0.04$ & $0.98 \pm 0.00$ & $1.74 \pm 0.01$ \\
+TabPFN v3 & $\mathbf{5.24 \pm 0.01}$ & $\mathbf{0.94 \pm 0.00}$ & $\mathbf{1.23 \pm 0.00}$ & $\mathbf{11.12 \pm 0.01}$ & $\mathbf{0.74 \pm 0.00}$ & $\mathbf{3.79 \pm 0.00}$ & $\underline{5.39 \pm 0.05}$ & $\underline{0.91 \pm 0.00}$ & $\underline{0.80 \pm 0.01}$ & $\mathbf{6.62 \pm 0.02}$ & $\underline{0.98 \pm 0.00}$ & $\mathbf{1.61 \pm 0.01}$ \\
+Mitra & $5.96 \pm 0.00$ & $0.93 \pm 0.00$ & $1.40 \pm 0.00$ & $12.68 \pm 0.00$ & $0.69 \pm 0.00$ & $4.33 \pm 0.00$ & $9.95 \pm 0.00$ & $0.81 \pm 0.00$ & $1.48 \pm 0.00$ & $11.81 \pm 0.00$ & $0.96 \pm 0.00$ & $2.84 \pm 0.00$ \\
+\midrule
+\multicolumn{13}{l}{\textit{Deep Learning Baselines}} \\
+TabM & $6.06 \pm 0.05$ & $0.93 \pm 0.00$ & $1.43 \pm 0.01$ & $12.28 \pm 0.02$ & $0.70 \pm 0.00$ & $4.19 \pm 0.01$ & $10.60 \pm 0.15$ & $0.80 \pm 0.01$ & $1.58 \pm 0.02$ & $11.73 \pm 0.17$ & $0.96 \pm 0.00$ & $2.83 \pm 0.04$ \\
+FT-Transformer & $5.88 \pm 0.08$ & $0.93 \pm 0.00$ & $1.39 \pm 0.02$ & $12.14 \pm 0.16$ & $0.70 \pm 0.01$ & $4.14 \pm 0.06$ & $7.98 \pm 0.15$ & $0.86 \pm 0.02$ & $1.19 \pm 0.02$ & $10.30 \pm 0.13$ & $0.97 \pm 0.00$ & $2.51 \pm 0.03$ \\
+RealMLP & $5.87 \pm 0.08$ & $0.93 \pm 0.00$ & $1.38 \pm 0.02$ & $12.02 \pm 0.05$ & $0.71 \pm 0.00$ & $4.10 \pm 0.02$ & $7.03 \pm 0.27$ & $0.89 \pm 0.00$ & $1.05 \pm 0.04$ & $8.45 \pm 0.13$ & $0.98 \pm 0.00$ & $2.07 \pm 0.03$ \\
+ModernNCA & $6.93 \pm 0.07$ & $0.90 \pm 0.00$ & $1.64 \pm 0.02$ & $12.40 \pm 0.13$ & $0.67 \pm 0.01$ & $4.24 \pm 0.05$ & $7.49 \pm 0.29$ & $0.87 \pm 0.01$ & $1.12 \pm 0.04$ & $8.02 \pm 0.39$ & $0.97 \pm 0.00$ & $1.96 \pm 0.09$ \\
+ResNet & $5.90 \pm 0.05$ & $0.92 \pm 0.00$ & $1.40 \pm 0.01$ & $12.07 \pm 0.08$ & $0.70 \pm 0.01$ & $4.13 \pm 0.03$ & $8.62 \pm 0.24$ & $0.85 \pm 0.01$ & $1.29 \pm 0.04$ & $10.34 \pm 0.09$ & $0.97 \pm 0.00$ & $2.51 \pm 0.02$ \\
+MLP & $5.75 \pm 0.04$ & $0.93 \pm 0.00$ & $1.36 \pm 0.01$ & $11.97 \pm 0.09$ & $0.71 \pm 0.00$ & $4.09 \pm 0.03$ & $9.01 \pm 0.03$ & $0.84 \pm 0.00$ & $1.35 \pm 0.00$ & $10.75 \pm 0.04$ & $0.96 \pm 0.00$ & $2.61 \pm 0.01$ \\
+\midrule
+\multicolumn{13}{l}{\textit{Classical Methods}} \\
+CatBoost & $5.91 \pm 0.07$ & $0.93 \pm 0.00$ & $1.39 \pm 0.02$ & $12.09 \pm 0.11$ & $0.71 \pm 0.00$ & $4.13 \pm 0.04$ & $7.91 \pm 0.26$ & $0.88 \pm 0.01$ & $1.18 \pm 0.04$ & $9.50 \pm 0.54$ & $0.97 \pm 0.00$ & $2.32 \pm 0.13$ \\
+XGBoost & $6.24 \pm 0.13$ & $0.92 \pm 0.01$ & $1.48 \pm 0.03$ & $12.64 \pm 0.09$ & $0.68 \pm 0.01$ & $4.32 \pm 0.03$ & $6.87 \pm 0.10$ & $0.90 \pm 0.00$ & $1.03 \pm 0.02$ & $7.94 \pm 0.09$ & $0.98 \pm 0.00$ & $1.94 \pm 0.02$ \\
+LightGBM & $5.99 \pm 0.00$ & $0.93 \pm 0.00$ & $1.42 \pm 0.00$ & $12.09 \pm 0.00$ & $0.70 \pm 0.00$ & $4.14 \pm 0.00$ & $6.31 \pm 0.00$ & $0.91 \pm 0.00$ & $0.95 \pm 0.00$ & $7.37 \pm 0.00$ & $0.98 \pm 0.00$ & $1.80 \pm 0.00$ \\
+\bottomrule
+\end{tabular}}
+\end{table*}

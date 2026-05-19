@@ -1,0 +1,4 @@
+Model performance (SMAPE, \%) at 70\% training fraction on private industrial
+datasets (top row, blue background) and open-source steel datasets (bottom
+row, orange background). Lower is better. Error bars show $\pm$1 standard
+deviation across five seeds. Mitra ($\dagger$) is deterministic for $N < 8{,}192$.

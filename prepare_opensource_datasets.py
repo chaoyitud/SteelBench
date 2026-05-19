@@ -383,153 +383,85 @@ def prepare_matbench_steels(open_dir: Path, out_dir: Path, seed: int) -> list:
 
 
 # ═══════════════════════════════════════════════════════════════════════════════
-# Dataset C — NIMS fatigue (MatNavi / Agrawal 2014)
+# Dataset C — NIMS fatigue (Agrawal 2014, via hunterkimmett/Fatigue-Machine-Learning)
 # ═══════════════════════════════════════════════════════════════════════════════
+# Dataset: 437 rows, 25 numeric features, 1 target (Fatigue = fatigue strength MPa)
+# Source:  https://github.com/hunterkimmett/Fatigue-Machine-Learning
+# File:    fatigue_dataset.xlsx  (col "Sl. No." = row ID, "Fatigue" = target)
+# No NaN, no categorical columns, heat-treatment absence encoded as 0.
 
 NIMS_URLS = [
-    "https://raw.githubusercontent.com/luisas/steel-fatigue-ML/main/data/fatigue_data.csv",
+    "https://github.com/hunterkimmett/Fatigue-Machine-Learning/raw/main/fatigue_dataset.xlsx",
+    "https://raw.githubusercontent.com/hunterkimmett/Fatigue-Machine-Learning/main/fatigue_dataset.xlsx",
 ]
 
-NIMS_TARGETS = {
-    'fs':  'fatigue_strength_MPa',
-    'uts': 'tensile_strength_MPa',
-    'hv':  'hardness_HV',
-}
-
-NIMS_HT_SENTINEL_COLS = [
-    'norm_temp', 'norm_time',
-    'carb_temp', 'carb_time', 'carb_potential',
-]
-NIMS_CAT_COLS = ['quench_medium', 'norm_type', 'temper_type']
-
-NIMS_ALT_COLUMN_MAPS = {
-    # Maps possible alternative names → canonical name used in code
-    'Fatigue strength (MPa)': 'fatigue_strength_MPa',
-    'fatigue strength (MPa)': 'fatigue_strength_MPa',
-    'Fatigue Strength (MPa)': 'fatigue_strength_MPa',
-    'Fatigue_Strength_MPa':   'fatigue_strength_MPa',
-    'UTS (MPa)':              'tensile_strength_MPa',
-    'Tensile Strength (MPa)': 'tensile_strength_MPa',
-    'tensile strength (MPa)': 'tensile_strength_MPa',
-    'Tensile_Strength_MPa':   'tensile_strength_MPa',
-    'Hardness (HV)':          'hardness_HV',
-    'hardness (HV)':          'hardness_HV',
-    'Hardness_HV':            'hardness_HV',
-    'HV':                     'hardness_HV',
-}
-
-
-def _normalise_nims_columns(df: pd.DataFrame) -> pd.DataFrame:
-    """Rename known variant column names to canonical names."""
-    df = df.copy()
-    col_rename = {}
-    for col in df.columns:
-        canonical = NIMS_ALT_COLUMN_MAPS.get(col)
-        if canonical:
-            col_rename[col] = canonical
-        else:
-            # Try case-insensitive partial match
-            col_lower = col.lower().replace(' ', '_').replace('(', '').replace(')', '')
-            for k, v in NIMS_ALT_COLUMN_MAPS.items():
-                if k.lower().replace(' ', '_').replace('(', '').replace(')', '') == col_lower:
-                    col_rename[col] = v
-                    break
-    if col_rename:
-        print(f"  Renaming columns: {col_rename}")
-        df = df.rename(columns=col_rename)
-    return df
+# Only one target in this dataset
+NIMS_TARGET_COL = "Fatigue"      # fatigue strength (MPa)
+NIMS_ID_COL     = "Sl. No."     # drop this
 
 
 def prepare_nims_fatigue(open_dir: Path, out_dir: Path, seed: int) -> list:
-    raw = open_dir / "nims_fatigue.csv"
+    raw = open_dir / "nims_fatigue.xlsx"
     if not _ensure_file(raw, NIMS_URLS, "NIMS fatigue"):
         print("  WARNING: NIMS fatigue dataset not available — skipping.", flush=True)
         return []
 
     try:
-        df = pd.read_csv(raw)
+        import warnings
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            df = pd.read_excel(raw, engine="openpyxl")
     except Exception as e:
-        print(f"  ERROR reading NIMS CSV: {e} — skipping.")
+        print(f"  ERROR reading NIMS xlsx: {e} — skipping.")
         return []
 
-    df = _normalise_nims_columns(df)
     print(f"\nnims_fatigue: {len(df)} rows, columns: {list(df.columns)}")
 
-    # ── Sentinel encoding for heat-treatment absence ──────────────────────────
-    for col in NIMS_HT_SENTINEL_COLS:
-        if col in df.columns:
-            indicator = f"{col}_present"
-            df[indicator] = (~df[col].isna()).astype(float)
-            df[col] = df[col].fillna(-1.0)
+    # Drop the row-ID column
+    if NIMS_ID_COL in df.columns:
+        df = df.drop(columns=[NIMS_ID_COL])
 
-    # ── One-hot encode categorical heat-treatment columns ─────────────────────
-    cat_cols_present = [c for c in NIMS_CAT_COLS if c in df.columns]
-    if cat_cols_present:
-        df = pd.get_dummies(df, columns=cat_cols_present, dummy_na=False)
-
-    # ── Identify all target columns ───────────────────────────────────────────
-    available_targets = {k: v for k, v in NIMS_TARGETS.items() if v in df.columns}
-    if not available_targets:
-        # Try to find targets by partial name match
-        print(f"  Canonical target columns not found; searching in: {list(df.columns)}")
-        for k, v in NIMS_TARGETS.items():
-            for col in df.columns:
-                if any(kw in col.lower() for kw in
-                       [v.split('_')[0].lower(), v.lower()[:6]]):
-                    available_targets[k] = col
-                    print(f"  Mapped {k} → '{col}'")
-                    break
-
-    if not available_targets:
-        print("  ERROR: No NIMS target columns found — skipping.")
+    if NIMS_TARGET_COL not in df.columns:
+        print(f"  ERROR: target column '{NIMS_TARGET_COL}' not found — skipping.")
         return []
 
-    # ── Feature columns ────────────────────────────────────────────────────────
-    non_feature = set(NIMS_TARGETS.values()) | {'formula', 'composition', 'sample_id', 'id'}
+    # All remaining numeric columns except target are features
     feature_cols = [c for c in df.columns
-                    if c not in non_feature
+                    if c != NIMS_TARGET_COL
                     and pd.api.types.is_numeric_dtype(df[c])]
-    print(f"  Feature columns ({len(feature_cols)}): {feature_cols[:8]}…")
+    print(f"  Feature columns ({len(feature_cols)}): {feature_cols}")
+
+    X = df[feature_cols].values.astype(np.float64)
+    y = df[NIMS_TARGET_COL].values.astype(np.float64)
+    print(f"  nims_fs: N={len(df)}  target_range=[{y.min():.1f}, {y.max():.1f}]")
+    print(f"  NaN in X: {np.isnan(X).sum()}  NaN in y: {np.isnan(y).sum()}")
 
     rows_summary = []
-    for key, tcol in available_targets.items():
-        sub = df[feature_cols + [tcol]].copy()
-        sub = sub.dropna(subset=[tcol])
+    for frac in FRACS:
+        folder = f"nims_fs_rs{frac}"
+        X_train, X_val, X_test, y_train, y_val, y_test = rs_split(
+            X, y, frac / 100.0, seed)
 
-        # Fill any remaining NaN in features with column median
-        for fc in feature_cols:
-            if sub[fc].isna().any():
-                sub[fc] = sub[fc].fillna(sub[fc].median())
-
-        X = sub[feature_cols].values.astype(np.float64)
-        y = sub[tcol].values.astype(np.float64)
-        print(f"\n  nims_{key}: N={len(sub)}  target_range=[{y.min():.1f}, {y.max():.1f}]")
-
-        for frac in FRACS:
-            folder = f"nims_{key}_rs{frac}"
-            X_train, X_val, X_test, y_train, y_val, y_test = rs_split(
-                X, y, frac / 100.0, seed)
-
-            info = {
-                "source_dataset": "nims_fatigue",
-                "target_col":     tcol,
-                "split_type":     f"rs{frac}",
-            }
-            write_talent_folder(out_dir, folder,
-                                X_train, X_val, X_test,
-                                y_train, y_val, y_test, info)
-            _print_folder_info(folder, info,
-                               X_train, X_val, X_test,
-                               y_train, y_val, y_test)
-            rows_summary.append({
-                "folder": folder,
-                "source": "nims_fatigue",
-                "target": tcol,
-                "N_train": X_train.shape[0],
-                "Val":     X_val.shape[0],
-                "Test":    X_test.shape[0],
-                "d":       X_train.shape[1],
-            })
+        info = {
+            "source_dataset": "nims_fatigue",
+            "target_col":     NIMS_TARGET_COL,
+            "split_type":     f"rs{frac}",
+        }
+        write_talent_folder(out_dir, folder,
+                            X_train, X_val, X_test,
+                            y_train, y_val, y_test, info)
+        _print_folder_info(folder, info,
+                           X_train, X_val, X_test,
+                           y_train, y_val, y_test)
+        rows_summary.append({
+            "folder":  folder,
+            "source":  "nims_fatigue",
+            "target":  NIMS_TARGET_COL,
+            "N_train": X_train.shape[0],
+            "Val":     X_val.shape[0],
+            "Test":    X_test.shape[0],
+            "d":       X_train.shape[1],
+        })
 
     return rows_summary
 

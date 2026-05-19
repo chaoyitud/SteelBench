@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Model & TS SMAPE & TS MAE & YS SMAPE & YS MAE \\
+\midrule
+\multicolumn{5}{l}{\textit{TFM}} \\
+TabPFN-3 & \underline{$0.80\pm0.01$} & \underline{$5.4\pm0.0$} & \textbf{$1.61\pm0.01$} & \textbf{$6.6\pm0.0$} \\
+LimiX & \textbf{$0.78\pm0.00$} & \textbf{$5.2\pm0.0$} & \underline{$1.64\pm0.01$} & \underline{$6.7\pm0.0$} \\
+TabPFN v2 & $0.99\pm0.00$ & $6.8\pm0.0$ & $1.74\pm0.01$ & $7.2\pm0.0$ \\
+Mitra$\dag$ & $1.48\pm0.00$ & $9.9\pm0.0$ & $2.84\pm0.00$ & $11.8\pm0.0$ \\
+\midrule
+\multicolumn{5}{l}{\textit{Deep}} \\
+TabM & $1.58\pm0.02$ & $10.6\pm0.1$ & $2.83\pm0.04$ & $11.7\pm0.2$ \\
+FT-Transformer & $1.19\pm0.02$ & $8.0\pm0.2$ & $2.51\pm0.03$ & $10.3\pm0.1$ \\
+RealMLP & $1.05\pm0.04$ & $7.0\pm0.3$ & $2.07\pm0.03$ & $8.4\pm0.1$ \\
+ModernNCA & $1.12\pm0.04$ & $7.5\pm0.3$ & $1.96\pm0.09$ & $8.0\pm0.4$ \\
+ResNet & $1.29\pm0.04$ & $8.6\pm0.2$ & $2.51\pm0.02$ & $10.3\pm0.1$ \\
+MLP & $1.35\pm0.00$ & $9.0\pm0.0$ & $2.61\pm0.01$ & $10.8\pm0.0$ \\
+\midrule
+\multicolumn{5}{l}{\textit{Classical}} \\
+CatBoost & $1.18\pm0.04$ & $7.9\pm0.3$ & $2.32\pm0.13$ & $9.5\pm0.5$ \\
+LightGBM & $0.95\pm0.00$ & $6.3\pm0.0$ & $1.80\pm0.00$ & $7.4\pm0.0$ \\
+XGBoost & $1.03\pm0.02$ & $6.9\pm0.1$ & $1.94\pm0.02$ & $7.9\pm0.1$ \\
+\midrule
+\multicolumn{5}{l}{\footnotesize $\dag$ Deterministic; std\,=\,0.} \\
+\bottomrule
+\end{tabular}
+}
+\caption{Benchmark results on Outokumpu Steel at 70\% training fraction. Bold = best, underline = second-best per column. SMAPE in \%; MAE in MPa.}
+\end{table}

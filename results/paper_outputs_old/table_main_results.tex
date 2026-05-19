@@ -1,0 +1,32 @@
+\begin{table}[htbp]
+\centering
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{lrrrr}
+\toprule
+Model & $R_m$ SMAPE & $R_m$ MAE & $R_p$ SMAPE & $R_p$ MAE \\
+\midrule
+\multicolumn{5}{l}{\textit{TFM}} \\
+TabPFN-3 & \textbf{$1.23\pm0.00$} & \textbf{$5.2\pm0.0$} & \textbf{$3.79\pm0.00$} & \textbf{$11.1\pm0.0$} \\
+LimiX & \underline{$1.24\pm0.00$} & \underline{$5.3\pm0.0$} & \underline{$3.81\pm0.00$} & \underline{$11.2\pm0.0$} \\
+TabPFN v2 & $1.26\pm0.00$ & $5.4\pm0.0$ & $3.95\pm0.00$ & $11.6\pm0.0$ \\
+Mitra$\dag$ & $1.40\pm0.00$ & $6.0\pm0.0$ & $4.33\pm0.00$ & $12.7\pm0.0$ \\
+\midrule
+\multicolumn{5}{l}{\textit{Deep}} \\
+TabM & $1.43\pm0.01$ & $6.1\pm0.0$ & $4.19\pm0.01$ & $12.3\pm0.0$ \\
+FT-Transformer & $1.39\pm0.02$ & $5.9\pm0.1$ & $4.14\pm0.06$ & $12.1\pm0.2$ \\
+RealMLP & $1.38\pm0.02$ & $5.9\pm0.1$ & $4.10\pm0.02$ & $12.0\pm0.1$ \\
+ModernNCA & $1.64\pm0.02$ & $6.9\pm0.1$ & $4.24\pm0.05$ & $12.4\pm0.1$ \\
+ResNet & $1.40\pm0.01$ & $5.9\pm0.0$ & $4.13\pm0.03$ & $12.1\pm0.1$ \\
+MLP & $1.36\pm0.01$ & $5.7\pm0.0$ & $4.09\pm0.03$ & $12.0\pm0.1$ \\
+\midrule
+\multicolumn{5}{l}{\textit{Classical}} \\
+CatBoost & $1.39\pm0.02$ & $5.9\pm0.1$ & $4.13\pm0.04$ & $12.1\pm0.1$ \\
+LightGBM & $1.42\pm0.00$ & $6.0\pm0.0$ & $4.14\pm0.00$ & $12.1\pm0.0$ \\
+XGBoost & $1.48\pm0.03$ & $6.2\pm0.1$ & $4.32\pm0.03$ & $12.6\pm0.1$ \\
+\midrule
+\multicolumn{5}{l}{\footnotesize $\dag$ Deterministic at inference ($N<8{,}192$); std\,=\,0 by design.} \\
+\bottomrule
+\end{tabular}
+}
+\caption{Benchmark results on Tata Steel at 70\% training fraction. Bold = best, underline = second-best per column. SMAPE in \%; MAE in MPa.}
+\end{table}

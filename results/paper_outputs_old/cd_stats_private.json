@@ -1,0 +1,19 @@
+{
+  "friedman_chi2_private": 134.5302197802198,
+  "friedman_p_private": 7.584129957884905e-23,
+  "avg_ranks_private": {
+    "TabPFN-3": 1.4375,
+    "LimiX": 1.5625,
+    "TabPFN v2": 3.3125,
+    "Mitra\u2020": 11.4375,
+    "TabM": 11.25,
+    "FT-Transformer": 8.125,
+    "RealMLP": 6.5625,
+    "ModernNCA": 9.1875,
+    "ResNet": 9.25,
+    "MLP": 8.0625,
+    "CatBoost": 6.6875,
+    "LightGBM": 5.8125,
+    "XGBoost": 8.3125
+  }
+}

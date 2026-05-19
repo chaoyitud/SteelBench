@@ -1,0 +1,4 @@
+Advantage in SMAPE (\%) of the best tabular foundation model over the best
+classical baseline (gradient-boosted tree) at each training fraction.
+Positive values indicate TFM superiority. The advantage is consistent
+across all fractions and both datasets.

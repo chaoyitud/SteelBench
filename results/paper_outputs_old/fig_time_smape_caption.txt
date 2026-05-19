@@ -1,0 +1,1 @@
+Accuracy--efficiency scatter at 70\% training fraction. Each point is one model; x-axis is mean wall-clock time (training + inference, log scale); y-axis is mean SMAPE (\%) averaged across the four prediction tasks. The dashed grey line traces the Pareto frontier (lower-left = better on both axes). Colours denote model family: TFM (blue), Deep (red), Classical (green).
