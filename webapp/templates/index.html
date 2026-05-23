@@ -1,0 +1,2207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Depmat WP4 — Tabular ML Suite</title>
+<!-- Apply saved theme before CSS renders to prevent flash -->
+<script>(function(){var t=localStorage.getItem('theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+/* ─── CSS VARIABLES ─────────────────────────────────────────────────────── */
+:root {
+  --bg-deep:   #070d1a;
+  --bg-panel:  #0e1726;
+  --bg-card:   #151f30;
+  --bg-input:  #1c2a3f;
+  --border:    #243047;
+  --border-hi: #2e3e58;
+  --accent:    #38bdf8;
+  --accent-lo: #0ea5e9;
+  --gold:      #fbbf24;
+  --text-hi:   #f0f6ff;
+  --text-md:   #8ba3c1;
+  --text-lo:   #455570;
+  --tfm-col:   #2563eb;
+  --deep-col:  #dc2626;
+  --cls-col:   #16a34a;
+  --radius:    6px;
+  --radius-lg: 10px;
+  --sidebar-w: 380px;
+  --header-h:  56px;
+  --font-mono: 'Space Mono', 'Courier New', monospace;
+  --font-body: 'DM Sans', system-ui, sans-serif;
+  --trans:     150ms ease;
+}
+
+/* ─── LIGHT THEME OVERRIDES ─────────────────────────────────────────────── */
+html[data-theme="light"] {
+  --bg-deep:   #f0f4fa;
+  --bg-panel:  #e5ecf7;
+  --bg-card:   #ffffff;
+  --bg-input:  #edf1fb;
+  --border:    #cdd6eb;
+  --border-hi: #b0bdd6;
+  --accent:    #0284c7;
+  --accent-lo: #0369a1;
+  --gold:      #b45309;
+  --text-hi:   #0f172a;
+  --text-md:   #445272;
+  --text-lo:   #8a9ab8;
+}
+html[data-theme="light"] body::before { opacity: 0; }
+html[data-theme="light"] #app-header {
+  background: rgba(240,244,250,0.94);
+  border-bottom-color: var(--border);
+}
+html[data-theme="light"] .sb-step.done { color: #fff; }
+
+/* ─── RESET ─────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; scroll-behavior: smooth; }
+body {
+  font-family: var(--font-body);
+  background: var(--bg-deep);
+  color: var(--text-hi);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain noise overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+body > * { position: relative; z-index: 1; }
+
+/* ─── SCROLLBAR ─────────────────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-deep); }
+::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 3px; }
+
+/* ─── LAYOUT ────────────────────────────────────────────────────────────── */
+#app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  height: var(--header-h);
+  background: rgba(7,13,26,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 16px;
+}
+.header-logo {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+.header-logo span { color: var(--text-md); font-weight: 400; }
+.header-tags { display: flex; gap: 8px; flex: 1; }
+.header-tag {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--border);
+  color: var(--text-md);
+  background: var(--bg-input);
+}
+.header-tag.accent { border-color: var(--accent); color: var(--accent); }
+.header-tag.gold   { border-color: var(--gold);   color: var(--gold); }
+.header-info {
+  font-size: 0.72rem;
+  color: var(--text-lo);
+  white-space: nowrap;
+}
+.theme-toggle-btn {
+  flex-shrink: 0;
+  background: none;
+  border: 1px solid var(--border-hi);
+  border-radius: var(--radius);
+  padding: 4px 9px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--text-md);
+  transition: border-color var(--trans), background var(--trans);
+}
+.theme-toggle-btn:hover { border-color: var(--accent); background: var(--bg-input); }
+
+#layout {
+  display: flex;
+  height: calc(100vh - var(--header-h));
+}
+
+/* ─── SIDEBAR ───────────────────────────────────────────────────────────── */
+#sidebar {
+  width: var(--sidebar-w);
+  min-width: var(--sidebar-w);
+  background: var(--bg-panel);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sb-section {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  /* overflow: hidden removed — it clips inner scrollbars */
+}
+.sb-section.hidden { display: none; }
+
+.sb-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  cursor: default;
+}
+.sb-step {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--bg-input);
+  border: 1px solid var(--border-hi);
+  display: grid;
+  place-items: center;
+  color: var(--text-md);
+  flex-shrink: 0;
+}
+.sb-step.done { background: var(--accent); border-color: var(--accent); color: #000; }
+.sb-title {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  letter-spacing: 0.03em;
+}
+.sb-body { padding: 14px; }
+
+/* ─── UPLOAD ZONE ───────────────────────────────────────────────────────── */
+#drop-zone {
+  border: 2px dashed var(--border-hi);
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--trans), background var(--trans);
+  background: var(--bg-input);
+}
+#drop-zone:hover, #drop-zone.drag-over {
+  border-color: var(--accent);
+  background: rgba(56,189,248,0.06);
+}
+#drop-zone .drop-icon {
+  font-size: 2rem;
+  margin-bottom: 8px;
+  display: block;
+  line-height: 1;
+}
+#drop-zone p  { font-size: 0.78rem; color: var(--text-md); margin-top: 4px; }
+#drop-zone small { font-size: 0.68rem; color: var(--text-lo); }
+#file-input-hidden { display: none; }
+
+/* ─── SPLIT-MODE DROP ZONES ─────────────────────────────────────────────── */
+.drop-zone-split {
+  border: 1.5px dashed var(--border-hi);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color var(--trans), background var(--trans);
+  background: var(--bg-input);
+  font-size: 0.78rem;
+}
+.drop-zone-split:hover, .drop-zone-split.drag-over {
+  border-color: var(--accent);
+  background: rgba(56,189,248,0.06);
+}
+.drop-zone-split.has-file {
+  border-color: var(--accent);
+  background: rgba(56,189,248,0.05);
+}
+.drop-zone-split strong { display: block; font-size: 0.78rem; color: var(--text-hi); margin-bottom: 3px; }
+.drop-zone-split p { font-size: 0.68rem; color: var(--text-lo); margin: 0; }
+#train-file-input, #test-file-input { display: none; }
+
+.example-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.ex-btn {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 7px 10px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-hi);
+  background: var(--bg-input);
+  color: var(--text-md);
+  cursor: pointer;
+  transition: border-color var(--trans), color var(--trans);
+  text-align: center;
+}
+.ex-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.delim-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--text-md);
+}
+.delim-badge code {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 6px;
+  color: var(--accent);
+}
+
+/* ─── DATA PREVIEW ──────────────────────────────────────────────────────── */
+.preview-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+.meta-badge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 3px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  color: var(--text-md);
+}
+.preview-scroll { overflow-x: auto; }
+.preview-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.68rem;
+  white-space: nowrap;
+}
+.preview-table th {
+  text-align: left;
+  padding: 5px 8px;
+  background: var(--bg-input);
+  color: var(--text-md);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--font-mono);
+  font-weight: 400;
+}
+.preview-table th .dtype-badge {
+  display: block;
+  font-size: 0.58rem;
+  color: var(--text-lo);
+  font-weight: 400;
+}
+.preview-table td {
+  padding: 4px 8px;
+  border-bottom: 1px solid rgba(36,48,71,0.5);
+  color: var(--text-hi);
+  font-family: var(--font-mono);
+}
+.preview-table tr:last-child td { border-bottom: none; }
+
+/* ─── TASK / TARGET ─────────────────────────────────────────────────────── */
+.pill-toggle { display: flex; gap: 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+.pill-btn {
+  flex: 1;
+  padding: 8px 12px;
+  background: var(--bg-input);
+  border: none;
+  color: var(--text-md);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: background var(--trans), color var(--trans);
+}
+.pill-btn.active { background: var(--accent); color: #000; font-weight: 700; }
+.pill-btn:first-child { border-right: 1px solid var(--border); }
+
+.sb-label {
+  font-size: 0.72rem;
+  color: var(--text-md);
+  margin-bottom: 6px;
+  margin-top: 12px;
+  display: block;
+}
+.sb-select {
+  width: 100%;
+  padding: 8px 10px;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text-hi);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  outline: none;
+  cursor: pointer;
+}
+.sb-select:focus { border-color: var(--accent); }
+
+/* ─── METRIC CHECKBOXES ─────────────────────────────────────────────────── */
+.metric-actions {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.link-btn {
+  font-size: 0.68rem;
+  color: var(--accent);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+}
+.metric-group-hdr {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-lo);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 8px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+.metric-group-hdr:first-of-type { margin-top: 0; border-top: none; padding-top: 0; }
+.metric-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 4px;
+}
+.metric-check-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: var(--text-md);
+  cursor: pointer;
+  user-select: none;
+}
+.metric-check-item input[type=checkbox] {
+  appearance: none;
+  width: 14px; height: 14px;
+  border: 1px solid var(--border-hi);
+  border-radius: 3px;
+  background: var(--bg-input);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+.metric-check-item input[type=checkbox]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.metric-check-item input[type=checkbox]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -1px; left: 2px;
+  font-size: 10px;
+  color: #000;
+  font-weight: 700;
+}
+
+/* ─── MODEL CHECKBOXES ──────────────────────────────────────────────────── */
+.family-block { margin-bottom: 12px; }
+.family-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.fam-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.fam-name { font-size: 0.78rem; font-weight: 600; color: var(--text-hi); }
+.fam-toggle { font-size: 0.65rem; color: var(--accent); cursor: pointer; margin-left: auto; }
+.model-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.model-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  transition: border-color var(--trans);
+  user-select: none;
+  font-size: 0.70rem;
+  color: var(--text-md);
+}
+.model-check:hover { border-color: var(--border-hi); }
+.model-check.checked { border-color: var(--border-hi); color: var(--text-hi); }
+.model-swatch {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.model-check input[type=checkbox] {
+  appearance: none;
+  width: 12px; height: 12px;
+  border: 1px solid var(--border-hi);
+  border-radius: 2px;
+  background: var(--bg-deep);
+  cursor: pointer;
+  position: relative;
+  flex-shrink: 0;
+}
+.model-check input[type=checkbox]:checked { background: var(--accent); border-color: var(--accent); }
+.model-check input[type=checkbox]:checked::after {
+  content: '✓';
+  position: absolute;
+  top: -2px; left: 1px;
+  font-size: 9px;
+  color: #000;
+  font-weight: 700;
+}
+
+/* ─── SETTINGS ──────────────────────────────────────────────────────────── */
+.settings-row { margin-bottom: 14px; }
+.settings-row:last-child { margin-bottom: 0; }
+.settings-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: var(--text-md);
+  margin-bottom: 6px;
+}
+.settings-val {
+  font-family: var(--font-mono);
+  color: var(--accent);
+  font-size: 0.78rem;
+}
+input[type=range] {
+  -webkit-appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--border-hi);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px; height: 14px;
+  border-radius: 50%;
+  background: var(--accent);
+  cursor: pointer;
+  border: 2px solid var(--bg-deep);
+}
+
+/* ─── RUN BUTTON ────────────────────────────────────────────────────────── */
+#run-btn {
+  width: 100%;
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  border-radius: var(--radius);
+  border: none;
+  background: var(--accent);
+  color: #000;
+  cursor: pointer;
+  transition: background var(--trans), opacity var(--trans);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+#run-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+#run-btn:not(:disabled):hover { background: var(--accent-lo); }
+.spinner {
+  width: 14px; height: 14px;
+  border: 2px solid rgba(0,0,0,0.3);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: none;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── MAIN AREA ─────────────────────────────────────────────────────────── */
+#main {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── WELCOME STATE ─────────────────────────────────────────────────────── */
+#welcome-state {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 20px;
+  padding: 40px;
+}
+.welcome-hex {
+  width: 80px; height: 80px;
+  opacity: 0.35;
+}
+.welcome-title {
+  font-size: 1.6rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  letter-spacing: -0.02em;
+}
+.welcome-sub {
+  font-size: 0.85rem;
+  color: var(--text-md);
+  max-width: 480px;
+  line-height: 1.6;
+}
+.welcome-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  max-width: 500px;
+}
+.welcome-badge {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 5px 12px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-lo);
+  cursor: default;
+}
+
+/* ─── PROGRESS STATE ────────────────────────────────────────────────────── */
+#progress-state { display: none; }
+.progress-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+}
+.progress-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-hi);
+  margin-bottom: 6px;
+}
+.progress-sub {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-md);
+  margin-bottom: 18px;
+}
+.progress-bar-wrap {
+  width: 100%;
+  height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 10px;
+}
+.progress-bar-inner {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent-lo), var(--accent), var(--accent-lo));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  border-radius: 2px;
+  width: 100%;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+.progress-metrics-label {
+  font-size: 0.68rem;
+  color: var(--text-lo);
+  font-family: var(--font-mono);
+}
+
+/* ─── RESULTS STATE ─────────────────────────────────────────────────────── */
+#results-state { display: none; }
+
+/* Stats row */
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+.stat-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px 16px;
+}
+.stat-label {
+  font-size: 0.65rem;
+  font-family: var(--font-mono);
+  color: var(--text-lo);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-bottom: 6px;
+}
+.stat-value {
+  font-size: 1.05rem;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  color: var(--text-hi);
+}
+.stat-sub {
+  font-size: 0.65rem;
+  color: var(--text-md);
+  margin-top: 3px;
+}
+.fam-pill {
+  display: inline-block;
+  font-size: 0.60rem;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 3px;
+  margin-left: 6px;
+  font-weight: 700;
+}
+.proxy-badge {
+  font-size: 0.60rem;
+  font-family: var(--font-mono);
+  color: var(--gold);
+  border: 1px solid var(--gold);
+  padding: 1px 5px;
+  border-radius: 3px;
+  margin-left: 4px;
+}
+
+/* Metric tabs */
+.metric-tabs {
+  display: flex;
+  gap: 0;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow-x: auto;
+  padding: 3px;
+  flex-wrap: wrap;
+  gap: 3px;
+}
+.metric-tab {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  padding: 6px 12px;
+  border-radius: calc(var(--radius) - 1px);
+  border: none;
+  background: transparent;
+  color: var(--text-md);
+  cursor: pointer;
+  transition: background var(--trans), color var(--trans);
+  white-space: nowrap;
+}
+.metric-tab.active {
+  background: var(--accent);
+  color: #000;
+  font-weight: 700;
+}
+
+/* Bar chart panel */
+.chart-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+  text-align: center;
+  min-height: 120px;
+}
+.chart-panel img { max-width: 100%; border-radius: var(--radius); }
+.chart-placeholder {
+  color: var(--text-lo);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 40px;
+}
+
+/* Leaderboard table */
+.leaderboard-wrap {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.leaderboard-scroll { overflow-x: auto; }
+table.lb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+.lb-table th {
+  padding: 9px 12px;
+  text-align: left;
+  background: var(--bg-input);
+  color: var(--text-md);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 400;
+  white-space: nowrap;
+  border-bottom: 1px solid var(--border);
+}
+.lb-table th .sort-arrow { margin-left: 4px; color: var(--text-lo); }
+.lb-table th.metric-col { text-align: right; }
+.lb-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid rgba(36,48,71,0.5);
+  color: var(--text-hi);
+  vertical-align: middle;
+}
+.lb-table tr:last-child td { border-bottom: none; }
+.lb-table tr:hover td { background: rgba(56,189,248,0.03); }
+.lb-table td.metric-val {
+  text-align: right;
+  font-family: var(--font-mono);
+  font-size: 0.70rem;
+  color: var(--text-md);
+  white-space: nowrap;
+}
+.lb-table td.metric-val.val-best {
+  color: var(--accent);
+  font-weight: 700;
+}
+.rank-badge {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  text-align: center;
+  line-height: 22px;
+  background: var(--bg-input);
+  color: var(--text-md);
+  flex-shrink: 0;
+}
+.rank-badge.gold   { background: #78350f; color: var(--gold); font-weight: 700; }
+.rank-badge.silver { background: #1f2937; color: #9ca3af; font-weight: 700; }
+.rank-badge.bronze { background: #1f2937; color: #b45309; font-weight: 700; }
+html[data-theme="light"] .rank-badge.gold   { background: #fef3c7; color: #92400e; }
+html[data-theme="light"] .rank-badge.silver { background: #e5e7eb; color: #374151; }
+html[data-theme="light"] .rank-badge.bronze { background: #fde8d0; color: #9a3412; }
+.model-dot {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  flex-shrink: 0;
+}
+.model-name-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lb-footnote {
+  font-size: 0.65rem;
+  color: var(--text-lo);
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  font-family: var(--font-mono);
+}
+
+/* Scatter / CM grid */
+.plot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+}
+.plot-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.plot-card img { width: 100%; display: block; }
+.plot-card-foot {
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.plot-model-name {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-hi);
+}
+.plot-metric-val {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-md);
+  margin-left: auto;
+}
+
+/* Dataset profile */
+.profile-toggle {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+.profile-toggle-hdr {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.78rem;
+  color: var(--text-md);
+}
+.profile-toggle-hdr:hover { color: var(--text-hi); }
+.profile-toggle-hdr .arrow { transition: transform 0.2s; font-size: 0.65rem; }
+.profile-toggle-hdr.open .arrow { transform: rotate(90deg); }
+.profile-body {
+  display: none;
+  padding: 14px 16px;
+  border-top: 1px solid var(--border);
+}
+.profile-body.open { display: block; }
+.profile-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.pstat { font-size: 0.72rem; color: var(--text-md); }
+.pstat strong { color: var(--text-hi); font-family: var(--font-mono); }
+
+/* Section header */
+.results-section-title {
+  font-size: 0.72rem;
+  font-family: var(--font-mono);
+  color: var(--text-lo);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 10px;
+}
+
+/* ─── PROGRESS BAR (deterministic) ─────────────────────────────────────── */
+.progress-bar-inner {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 2px;
+  transition: width 0.4s ease;
+  width: 0%;
+}
+.progress-bar-inner.indeterminate {
+  background: linear-gradient(90deg, var(--accent-lo), var(--accent), var(--accent-lo));
+  background-size: 200% 100%;
+  animation: shimmer 1.5s linear infinite;
+  width: 100%;
+}
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+/* ─── MODEL STATUS GRID ──────────────────────────────────────────────────── */
+.model-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 6px;
+  margin-top: 14px;
+}
+.model-status-card {
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 6px 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.msc-name { flex:1; font-size:0.65rem; color:var(--text-md); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.msc-status { font-family:var(--font-mono); font-size:0.58rem; padding:1px 5px; border-radius:3px; }
+.msc-status.pending { color:var(--text-lo); background:var(--bg-deep); }
+.msc-status.running { color:var(--gold); background:rgba(251,191,36,0.12); animation:pulse 1s ease-in-out infinite; }
+.msc-status.done    { color:var(--cls-col); background:rgba(22,163,74,0.12); }
+.msc-status.error   { color:#ef4444; background:rgba(239,68,68,0.12); }
+.msc-val { font-family:var(--font-mono); font-size:0.60rem; color:var(--accent); min-width:38px; text-align:right; }
+@keyframes pulse { 0%,100% { opacity:1; } 50% { opacity:0.45; } }
+
+/* ─── FEATURE SELECTION ──────────────────────────────────────────────────── */
+.feat-cols-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  max-height: 280px;
+  overflow-y: scroll;
+  overscroll-behavior: contain;
+}
+.feat-check-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--bg-input);
+  cursor: pointer;
+  font-size: 0.65rem;
+  color: var(--text-md);
+  user-select: none;
+  overflow: hidden;
+}
+.feat-check-item:hover { border-color: var(--border-hi); color: var(--text-hi); }
+.feat-check-item input[type=checkbox] {
+  appearance: none; width:11px; height:11px;
+  border:1px solid var(--border-hi); border-radius:2px;
+  background:var(--bg-deep); cursor:pointer; position:relative; flex-shrink:0;
+}
+.feat-check-item input[type=checkbox]:checked { background:var(--accent); border-color:var(--accent); }
+.feat-check-item input[type=checkbox]:checked::after {
+  content:'✓'; position:absolute; top:-2px; left:1px; font-size:8px; color:#000; font-weight:700;
+}
+.feat-name { flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.feat-dtype { font-size:0.55rem; color:var(--text-lo); flex-shrink:0; }
+
+/* ─── UTILITY ───────────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ HEADER ═══════════════════════════════════════════ -->
+<header id="app-header">
+  <div class="header-logo">Depmat <span>WP4</span></div>
+  <div class="header-tags">
+    <span class="header-tag accent" id="hdr-dataset">no dataset</span>
+    <span class="header-tag gold"   id="hdr-task"   style="display:none"></span>
+    <span class="header-tag"        id="hdr-target" style="display:none"></span>
+  </div>
+  <div class="header-info">13 models · 12 reg · 13 cls metrics</div>
+  <button id="theme-toggle" class="theme-toggle-btn" onclick="toggleTheme()" title="Toggle light / dark theme">🌙</button>
+</header>
+
+<!-- ═══════════════════════ LAYOUT ═══════════════════════════════════════════ -->
+<div id="layout">
+
+<!-- ════════════════════════ SIDEBAR ═════════════════════════════════════════ -->
+<nav id="sidebar">
+
+  <!-- §1 DATA SOURCE -->
+  <div class="sb-section" id="sec-upload">
+    <div class="sb-header">
+      <div class="sb-step" id="step-1">1</div>
+      <div class="sb-title">Data Source</div>
+    </div>
+    <div class="sb-body">
+      <!-- Split mode toggle -->
+      <div class="pill-toggle" id="split-mode-toggle" style="margin-bottom:10px">
+        <button class="pill-btn active" data-mode="auto"     onclick="setSplitMode('auto')">Auto-split</button>
+        <button class="pill-btn"        data-mode="presplit" onclick="setSplitMode('presplit')">Pre-split</button>
+      </div>
+
+      <!-- AUTO mode: single unified CSV -->
+      <div id="auto-upload-zone">
+        <div id="drop-zone" role="button" tabindex="0" aria-label="Upload CSV">
+          <span class="drop-icon">📂</span>
+          <strong>Click or drag CSV here</strong>
+          <p>Supports comma, semicolon, tab, pipe delimiters</p>
+          <small>Max 100 MB</small>
+        </div>
+        <input type="file" id="file-input-hidden" accept=".csv">
+        <div class="example-row">
+          <button class="ex-btn" onclick="loadExample('regression')">▶ Regression example</button>
+          <button class="ex-btn" onclick="loadExample('classification')">▶ Classification example</button>
+        </div>
+      </div>
+
+      <!-- PRE-SPLIT mode: separate train + test CSVs -->
+      <div id="presplit-upload-zone" class="hidden">
+        <div id="drop-zone-train" class="drop-zone-split" role="button" tabindex="0" aria-label="Upload train CSV">
+          <span style="font-size:1.2rem">📂</span>
+          <strong>Train CSV</strong>
+          <p id="train-file-name">No file selected</p>
+        </div>
+        <input type="file" id="train-file-input" accept=".csv">
+        <div id="drop-zone-test" class="drop-zone-split" role="button" tabindex="0" aria-label="Upload test CSV" style="margin-top:8px">
+          <span style="font-size:1.2rem">📂</span>
+          <strong>Test CSV</strong>
+          <p id="test-file-name">No file selected</p>
+        </div>
+        <input type="file" id="test-file-input" accept=".csv">
+      </div>
+
+      <div id="delim-badge" style="display:none" class="delim-badge">
+        detected delimiter: <code id="delim-val"></code>
+      </div>
+    </div>
+  </div>
+
+  <!-- §2 DATA PREVIEW -->
+  <div class="sb-section hidden" id="sec-preview">
+    <div class="sb-header">
+      <div class="sb-step" id="step-2">2</div>
+      <div class="sb-title">Data Preview</div>
+    </div>
+    <div class="sb-body">
+      <div class="preview-meta" id="preview-meta"></div>
+      <div class="preview-scroll">
+        <table class="preview-table" id="preview-table"></table>
+      </div>
+    </div>
+  </div>
+
+  <!-- §3 TASK & TARGET -->
+  <div class="sb-section hidden" id="sec-task">
+    <div class="sb-header">
+      <div class="sb-step" id="step-3">3</div>
+      <div class="sb-title">Task &amp; Target</div>
+    </div>
+    <div class="sb-body">
+      <div class="pill-toggle" id="task-toggle">
+        <button class="pill-btn active" data-task="regression" onclick="setTask('regression')">Regression</button>
+        <button class="pill-btn"        data-task="classification" onclick="setTask('classification')">Classification</button>
+      </div>
+      <label class="sb-label" for="target-col">Target column</label>
+      <select class="sb-select" id="target-col" onchange="onTargetChange()">
+        <option value="">Select column…</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- §3.5 FEATURE SELECTION -->
+  <div class="sb-section hidden" id="sec-features">
+    <div class="sb-header">
+      <div class="sb-step" style="font-size:0.60rem">F</div>
+      <div class="sb-title">Feature Columns</div>
+    </div>
+    <div class="sb-body">
+      <div class="metric-actions" style="margin-bottom:8px">
+        <span class="meta-badge" id="feat-count-badge">0 / 0 selected</span>
+        <button class="link-btn" onclick="selectAllFeatures()">All</button>
+        <button class="link-btn" onclick="deselectAllFeatures()">None</button>
+      </div>
+      <div class="feat-cols-grid" id="feature-checks-container"></div>
+    </div>
+  </div>
+
+  <!-- §4 METRICS -->
+  <div class="sb-section hidden" id="sec-metrics">
+    <div class="sb-header">
+      <div class="sb-step" id="step-4">4</div>
+      <div class="sb-title">Metrics to display</div>
+    </div>
+    <div class="sb-body">
+      <div class="metric-actions">
+        <button class="link-btn" onclick="selectAllMetrics()">Select all</button>
+        <button class="link-btn" onclick="resetDefaultMetrics()">Reset defaults</button>
+      </div>
+      <div id="metric-checks-container"></div>
+    </div>
+  </div>
+
+  <!-- §5 MODELS -->
+  <div class="sb-section hidden" id="sec-models">
+    <div class="sb-header">
+      <div class="sb-step" id="step-5">5</div>
+      <div class="sb-title">Models</div>
+    </div>
+    <div class="sb-body" id="model-checks-container"></div>
+  </div>
+
+  <!-- §6 SETTINGS -->
+  <div class="sb-section hidden" id="sec-settings">
+    <div class="sb-header">
+      <div class="sb-step" id="step-6">6</div>
+      <div class="sb-title">Settings</div>
+    </div>
+    <div class="sb-body">
+      <div class="settings-row" id="settings-row-train-frac">
+        <div class="settings-label">
+          Training fraction
+          <span class="settings-val" id="train-frac-val">70%</span>
+        </div>
+        <input type="range" id="train-frac" min="50" max="90" step="10" value="70"
+               oninput="document.getElementById('train-frac-val').textContent = this.value + '%'">
+      </div>
+      <div class="settings-row" id="settings-row-n-seeds">
+        <div class="settings-label">
+          Random seeds
+          <span class="settings-val" id="n-seeds-val">3</span>
+        </div>
+        <input type="range" id="n-seeds" min="1" max="5" step="1" value="3"
+               oninput="document.getElementById('n-seeds-val').textContent = this.value">
+      </div>
+      <div class="settings-row">
+        <div class="settings-label">
+          Compute device
+          <span class="settings-val" id="device-detected-label">detecting…</span>
+        </div>
+        <div class="pill-toggle" id="device-toggle" style="margin-top:6px">
+          <button class="pill-btn active" data-device="auto" onclick="setDevice('auto')">Auto</button>
+          <button class="pill-btn"        data-device="cpu"  onclick="setDevice('cpu')">CPU</button>
+          <button class="pill-btn"        data-device="cuda" onclick="setDevice('cuda')">CUDA</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- §7 RUN -->
+  <div class="sb-section hidden" id="sec-run">
+    <div class="sb-body">
+      <button id="run-btn" disabled onclick="runBenchmark()">
+        <div class="spinner" id="run-spinner"></div>
+        <span id="run-label">▶ Run Benchmark</span>
+      </button>
+    </div>
+  </div>
+
+</nav>
+
+<!-- ════════════════════════ MAIN ════════════════════════════════════════════ -->
+<main id="main">
+
+  <!-- WELCOME STATE -->
+  <div id="welcome-state">
+    <svg class="welcome-hex" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <polygon points="40,4 73,22 73,58 40,76 7,58 7,22" stroke="#38bdf8" stroke-width="1.5" fill="none" opacity="0.6"/>
+      <polygon points="40,14 63,27 63,53 40,66 17,53 17,27" stroke="#38bdf8" stroke-width="0.8" fill="none" opacity="0.3"/>
+      <circle cx="40" cy="40" r="10" fill="#38bdf8" opacity="0.15"/>
+      <circle cx="40" cy="40" r="4"  fill="#38bdf8" opacity="0.6"/>
+    </svg>
+    <div class="welcome-title">Depmat WP4</div>
+    <div class="welcome-sub">
+      Upload any tabular CSV and benchmark 13 state-of-the-art models — TFMs, deep learning,
+      and classical ML — with full metric reporting across 12 regression or 13 classification metrics.
+      Supports automatic train/test splitting or user-provided pre-split files.
+    </div>
+    <div class="welcome-badges">
+      <span class="welcome-badge">SMAPE</span>
+      <span class="welcome-badge">MAE</span>
+      <span class="welcome-badge">R²</span>
+      <span class="welcome-badge">F1</span>
+      <span class="welcome-badge">ROC-AUC</span>
+      <span class="welcome-badge">RMSE</span>
+      <span class="welcome-badge">MCC</span>
+      <span class="welcome-badge">Log Loss</span>
+      <span class="welcome-badge">Pearson r</span>
+      <span class="welcome-badge">Cohen's κ</span>
+      <span class="welcome-badge">RMSLE</span>
+      <span class="welcome-badge">Balanced Acc.</span>
+    </div>
+  </div>
+
+  <!-- PROGRESS STATE -->
+  <div id="progress-state">
+    <div class="progress-card">
+      <div class="progress-title" id="progress-title">Running benchmark…</div>
+      <div class="progress-sub" id="progress-line">Initialising…</div>
+      <div class="progress-bar-wrap">
+        <div class="progress-bar-inner indeterminate" id="progress-bar"></div>
+      </div>
+      <div class="model-status-grid" id="model-status-grid"></div>
+    </div>
+  </div>
+
+  <!-- RESULTS STATE -->
+  <div id="results-state">
+
+    <!-- (A) Stats row -->
+    <div class="stats-row" id="stats-row"></div>
+
+    <!-- (B) Metric tabs -->
+    <div>
+      <div class="results-section-title">Metric view</div>
+      <div class="metric-tabs" id="metric-tabs"></div>
+    </div>
+
+    <!-- (C) Bar chart -->
+    <div class="chart-panel" id="chart-panel">
+      <div class="chart-placeholder">Select a metric tab to view chart</div>
+    </div>
+
+    <!-- (D) Leaderboard -->
+    <div>
+      <div class="results-section-title">Leaderboard</div>
+      <div class="leaderboard-wrap">
+        <div class="leaderboard-scroll">
+          <table class="lb-table" id="lb-table"></table>
+        </div>
+        <div class="lb-footnote" id="lb-footnote"></div>
+      </div>
+    </div>
+
+    <!-- (E) Scatter / CM plots -->
+    <div>
+      <div class="results-section-title" id="plot-grid-title">Predicted vs Actual</div>
+      <div class="plot-grid" id="plot-grid"></div>
+    </div>
+
+    <!-- (F) Dataset profile -->
+    <div class="profile-toggle">
+      <div class="profile-toggle-hdr" id="profile-hdr" onclick="toggleProfile()">
+        <span>▸ Dataset Profile</span>
+        <span class="arrow">▶</span>
+      </div>
+      <div class="profile-body" id="profile-body"></div>
+    </div>
+
+  </div><!-- /results-state -->
+
+</main>
+</div><!-- /layout -->
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════════════════════════ -->
+<script>
+// ── BACKEND DATA FROM JINJA ───────────────────────────────────────────────────
+const MODEL_REGISTRY        = {{ model_registry | tojson }};
+const MODEL_ORDER           = {{ model_order | tojson }};
+const FAMILY_COLORS         = {{ family_colors | tojson }};
+const REGRESSION_METRICS    = {{ regression_metrics | tojson }};
+const CLASSIFICATION_METRICS= {{ classification_metrics | tojson }};
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let uploadedFile    = null;     // File object (or null when using example blob)
+let exampleBlob     = null;     // Blob from /load_example
+let currentColumns  = [];
+let currentDtypes   = {};
+let currentTask     = 'regression';
+let activeMetric    = null;
+window.lastResults  = null;
+let selectedDevice  = 'auto';
+let cudaAvailable   = false;
+let splitMode       = 'auto';   // 'auto' | 'presplit'
+let uploadedTrainFile = null;   // File for pre-split train set
+let uploadedTestFile  = null;   // File for pre-split test set
+
+// ── PROGRESSIVE SIDEBAR REVEAL ───────────────────────────────────────────────
+function showSection(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('hidden');
+}
+function markStep(n) {
+  const el = document.getElementById('step-' + n);
+  if (el) el.classList.add('done');
+}
+
+// ── HEADER TAGS ───────────────────────────────────────────────────────────────
+function updateHeaderTags() {
+  const ds  = document.getElementById('hdr-dataset');
+  const tk  = document.getElementById('hdr-task');
+  const tg  = document.getElementById('hdr-target');
+  if (splitMode === 'presplit') {
+    if (uploadedTrainFile || uploadedTestFile) {
+      const trName = uploadedTrainFile ? uploadedTrainFile.name : '?';
+      const teName = uploadedTestFile  ? uploadedTestFile.name  : '?';
+      ds.textContent = trName + ' / ' + teName;
+      ds.classList.add('accent');
+    }
+  } else if (uploadedFile || exampleBlob) {
+    const name = uploadedFile ? uploadedFile.name : 'example.csv';
+    ds.textContent = name;
+    ds.classList.add('accent');
+  }
+  const targetSel = document.getElementById('target-col');
+  if (targetSel && targetSel.value) {
+    tk.textContent = currentTask;
+    tk.style.display = '';
+    tg.textContent = '→ ' + targetSel.value;
+    tg.style.display = '';
+  }
+}
+
+// ── DROP-ZONE ─────────────────────────────────────────────────────────────────
+const dropZone  = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input-hidden');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') fileInput.click(); });
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  if (e.dataTransfer.files.length > 0) handleFile(e.dataTransfer.files[0]);
+});
+fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+// ── PRE-SPLIT DROP ZONES ──────────────────────────────────────────────────────
+const dropZoneTrain = document.getElementById('drop-zone-train');
+const trainFileInput = document.getElementById('train-file-input');
+dropZoneTrain.addEventListener('click', () => trainFileInput.click());
+dropZoneTrain.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') trainFileInput.click(); });
+dropZoneTrain.addEventListener('dragover', e => { e.preventDefault(); dropZoneTrain.classList.add('drag-over'); });
+dropZoneTrain.addEventListener('dragleave', () => dropZoneTrain.classList.remove('drag-over'));
+dropZoneTrain.addEventListener('drop', e => {
+  e.preventDefault(); dropZoneTrain.classList.remove('drag-over');
+  if (e.dataTransfer.files.length > 0) handleTrainFile(e.dataTransfer.files[0]);
+});
+trainFileInput.addEventListener('change', e => { if (e.target.files.length) handleTrainFile(e.target.files[0]); });
+
+const dropZoneTest = document.getElementById('drop-zone-test');
+const testFileInput = document.getElementById('test-file-input');
+dropZoneTest.addEventListener('click', () => testFileInput.click());
+dropZoneTest.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') testFileInput.click(); });
+dropZoneTest.addEventListener('dragover', e => { e.preventDefault(); dropZoneTest.classList.add('drag-over'); });
+dropZoneTest.addEventListener('dragleave', () => dropZoneTest.classList.remove('drag-over'));
+dropZoneTest.addEventListener('drop', e => {
+  e.preventDefault(); dropZoneTest.classList.remove('drag-over');
+  if (e.dataTransfer.files.length > 0) handleTestFile(e.dataTransfer.files[0]);
+});
+testFileInput.addEventListener('change', e => { if (e.target.files.length) handleTestFile(e.target.files[0]); });
+
+function handleTrainFile(file) {
+  uploadedTrainFile = file;
+  dropZoneTrain.classList.add('has-file');
+  document.getElementById('train-file-name').textContent = file.name;
+  const fd = new FormData();
+  fd.append('split_mode', 'presplit');
+  fd.append('train_file', file);
+  fetchColumns(fd, file.name);
+  updateRunButton();
+  updateHeaderTags();
+}
+
+function handleTestFile(file) {
+  uploadedTestFile = file;
+  dropZoneTest.classList.add('has-file');
+  document.getElementById('test-file-name').textContent = file.name;
+  updateRunButton();
+  updateHeaderTags();
+}
+
+function handleFile(file) {
+  uploadedFile = file;
+  exampleBlob  = null;
+  const fd = new FormData();
+  fd.append('file', file);
+  fetchColumns(fd, file.name);
+}
+
+async function fetchColumns(formData, filename) {
+  try {
+    const res  = await fetch('/get_columns', { method: 'POST', body: formData });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+    onColumnsLoaded(data, filename);
+  } catch (e) {
+    alert('Network error: ' + e.message);
+  }
+}
+
+function onColumnsLoaded(data, filename) {
+  currentColumns = data.columns;
+  currentDtypes  = data.dtypes || {};
+
+  // CUDA availability
+  cudaAvailable = data.cuda_available || false;
+  const devLabel = document.getElementById('device-detected-label');
+  if (devLabel) devLabel.textContent = cudaAvailable ? '(CUDA available)' : '(CPU only)';
+
+  // Header
+  document.getElementById('hdr-dataset').textContent = filename || 'dataset.csv';
+  document.getElementById('hdr-dataset').classList.add('accent');
+
+  // Show delimiter badge (guess from filename extension fallback)
+  document.getElementById('delim-badge').style.display = 'flex';
+  document.getElementById('delim-val').textContent = ',';  // server detected
+
+  // §2 preview
+  renderPreview(data);
+  showSection('sec-preview');
+  markStep(1);
+
+  // §3 task & target
+  populateTargetSelect(data.columns, data.dtypes);
+  if (data.suggested_task) setTask(data.suggested_task, false);
+  if (data.suggested_target) {
+    document.getElementById('target-col').value = data.suggested_target;
+  }
+  showSection('sec-task');
+  markStep(2);
+
+  // §F feature selection (build only if a target is already known)
+  if (data.suggested_target) {
+    buildFeatureList(data.columns, data.dtypes || {}, data.suggested_target);
+  }
+
+  // §4-7
+  renderMetricChecks();
+  renderModelChecks();
+  showSection('sec-metrics');
+  showSection('sec-models');
+  showSection('sec-settings');
+  showSection('sec-run');
+  markStep(3);
+
+  updateRunButton();
+  updateHeaderTags();
+}
+
+// ── PREVIEW ───────────────────────────────────────────────────────────────────
+function renderPreview(data) {
+  const meta = document.getElementById('preview-meta');
+  meta.innerHTML =
+    `<span class="meta-badge">${data.n_rows} rows</span>` +
+    `<span class="meta-badge">${data.n_columns} columns</span>`;
+
+  const cols  = (data.columns || []).slice(0, 8);
+  const rows  = (data.sample_data || []).slice(0, 5);
+  const dtypes= data.dtypes || {};
+
+  let html = '<thead><tr>';
+  cols.forEach(c => {
+    html += `<th>${c}<span class="dtype-badge">${dtypes[c] || ''}</span></th>`;
+  });
+  html += '</tr></thead><tbody>';
+  rows.forEach(row => {
+    html += '<tr>';
+    cols.forEach(c => {
+      const v = row[c];
+      html += `<td>${v === null || v === undefined ? '<em style="color:var(--text-lo)">null</em>' : String(v).slice(0, 20)}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('preview-table').innerHTML = html;
+}
+
+// ── TASK TOGGLE ───────────────────────────────────────────────────────────────
+function setTask(task, rerender = true) {
+  currentTask = task;
+  document.querySelectorAll('#task-toggle .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.task === task);
+  });
+  if (rerender) {
+    renderMetricChecks();
+  }
+  updateHeaderTags();
+}
+
+function populateTargetSelect(columns, dtypes) {
+  const sel = document.getElementById('target-col');
+  sel.innerHTML = '<option value="">Select column…</option>';
+  columns.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c + ' (' + (dtypes[c] || '?') + ')';
+    sel.appendChild(opt);
+  });
+}
+
+function onTargetChange() {
+  const targetCol = document.getElementById('target-col').value;
+  if (targetCol && currentColumns.length) {
+    buildFeatureList(currentColumns, currentDtypes, targetCol);
+  }
+  updateRunButton();
+  updateHeaderTags();
+}
+
+// ── METRIC CHECKBOXES ─────────────────────────────────────────────────────────
+function getMetricList() {
+  return currentTask === 'regression' ? REGRESSION_METRICS : CLASSIFICATION_METRICS;
+}
+
+function getDefaultKeys() {
+  return getMetricList().filter(m => m.default).map(m => m.key);
+}
+
+function getCheckedMetrics() {
+  return [...document.querySelectorAll('#metric-checks-container input[type=checkbox]:checked')]
+         .map(el => el.value);
+}
+
+function renderMetricChecks() {
+  const list    = getMetricList();
+  const defaults= getDefaultKeys();
+  const container = document.getElementById('metric-checks-container');
+  const groups  = [...new Set(list.map(m => m.group))];
+
+  let html = '';
+  groups.forEach(grp => {
+    html += `<div class="metric-group-hdr">${grp}</div><div class="metric-checks">`;
+    list.filter(m => m.group === grp).forEach(m => {
+      const chk = defaults.includes(m.key) ? 'checked' : '';
+      html += `<label class="metric-check-item">
+        <input type="checkbox" value="${m.key}" ${chk} onchange="onMetricChange()"> ${m.label}
+      </label>`;
+    });
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+function selectAllMetrics() {
+  document.querySelectorAll('#metric-checks-container input[type=checkbox]')
+    .forEach(el => el.checked = true);
+  onMetricChange();
+}
+function resetDefaultMetrics() {
+  const defaults = getDefaultKeys();
+  document.querySelectorAll('#metric-checks-container input[type=checkbox]')
+    .forEach(el => el.checked = defaults.includes(el.value));
+  onMetricChange();
+}
+function onMetricChange() {
+  if (window.lastResults) rerenderResults(window.lastResults, false);
+}
+
+// ── MODEL CHECKBOXES ──────────────────────────────────────────────────────────
+function renderModelChecks() {
+  const families = ['TFM', 'Deep', 'Classical'];
+  const container = document.getElementById('model-checks-container');
+  let html = '';
+  families.forEach(fam => {
+    const models = MODEL_ORDER.filter(k => MODEL_REGISTRY[k] && MODEL_REGISTRY[k].family === fam);
+    const color  = FAMILY_COLORS[fam] || '#888';
+    html += `<div class="family-block">
+      <div class="family-header">
+        <span class="fam-dot" style="background:${color}"></span>
+        <span class="fam-name">${fam}</span>
+        <span class="fam-toggle" onclick="toggleFamily('${fam}', true)">all on</span>
+        <span class="fam-toggle" onclick="toggleFamily('${fam}', false)" style="margin-left:4px">off</span>
+      </div>
+      <div class="model-grid">`;
+    models.forEach(k => {
+      const m = MODEL_REGISTRY[k];
+      html += `<label class="model-check checked" id="mc-${k}">
+        <input type="checkbox" value="${k}" checked onchange="onModelCheckChange('${k}')">
+        <span class="model-swatch" style="background:${m.color}"></span>
+        <span>${m.name}</span>
+      </label>`;
+    });
+    html += '</div></div>';
+  });
+  container.innerHTML = html;
+}
+
+function toggleFamily(fam, state) {
+  MODEL_ORDER.filter(k => MODEL_REGISTRY[k] && MODEL_REGISTRY[k].family === fam).forEach(k => {
+    const el = document.querySelector(`#mc-${k} input`);
+    if (el) el.checked = state;
+    const label = document.getElementById('mc-' + k);
+    if (label) label.classList.toggle('checked', state);
+  });
+}
+function onModelCheckChange(k) {
+  const el = document.querySelector(`#mc-${k} input`);
+  const label = document.getElementById('mc-' + k);
+  if (label && el) label.classList.toggle('checked', el.checked);
+}
+
+function getCheckedModels() {
+  return [...document.querySelectorAll('#model-checks-container input[type=checkbox]:checked')]
+         .map(el => el.value);
+}
+
+// ── RUN BUTTON ────────────────────────────────────────────────────────────────
+function updateRunButton() {
+  const btn       = document.getElementById('run-btn');
+  const hasTarget = document.getElementById('target-col').value !== '';
+  const hasFile   = splitMode === 'presplit'
+    ? (uploadedTrainFile !== null && uploadedTestFile !== null)
+    : (uploadedFile !== null || exampleBlob !== null);
+  btn.disabled = !(hasFile && hasTarget);
+}
+
+// ── RUN BENCHMARK (SSE streaming) ─────────────────────────────────────────────
+async function runBenchmark() {
+  const targetCol   = document.getElementById('target-col').value;
+  const models      = getCheckedModels();
+  const featureCols = getSelectedFeatures();
+
+  if (!targetCol) { alert('Please select a target column.'); return; }
+  if (!models.length) { alert('Please select at least one model.'); return; }
+
+  // Validate file availability
+  if (splitMode === 'presplit') {
+    if (!uploadedTrainFile || !uploadedTestFile) {
+      alert('Please upload both a train CSV and a test CSV.');
+      return;
+    }
+  }
+
+  showState('progress');
+
+  const nSeeds = splitMode === 'presplit' ? 1 : parseInt(document.getElementById('n-seeds').value);
+  document.getElementById('progress-line').textContent =
+    `Starting ${models.length} models · target: ${targetCol}` +
+    (splitMode === 'presplit' ? ' · pre-split mode' : ` · ${nSeeds} seeds`);
+  initModelStatusCards(models);
+
+  const bar = document.getElementById('progress-bar');
+  if (bar) { bar.classList.remove('indeterminate'); bar.style.width = '0%'; }
+
+  document.getElementById('run-spinner').style.display = 'block';
+  document.getElementById('run-label').textContent = 'Running…';
+  document.getElementById('run-btn').disabled = true;
+
+  const fd = new FormData();
+  fd.append('task', currentTask);
+  fd.append('target_column', targetCol);
+  fd.append('device', selectedDevice);
+  fd.append('split_mode', splitMode);
+  fd.append('theme', document.documentElement.getAttribute('data-theme') || 'dark');
+  models.forEach(m => fd.append('models', m));
+  featureCols.forEach(c => fd.append('feature_columns', c));
+
+  if (splitMode === 'presplit') {
+    fd.append('train_file', uploadedTrainFile);
+    fd.append('test_file',  uploadedTestFile);
+    fd.append('n_seeds', '1');
+    fd.append('train_fraction', '0.7');  // placeholder; backend computes actual fraction
+  } else {
+    const trainFrac = parseInt(document.getElementById('train-frac').value) / 100;
+    fd.append('train_fraction', trainFrac);
+    fd.append('n_seeds', nSeeds);
+    const fileBlob = uploadedFile || (exampleBlob ? new File([exampleBlob], 'example.csv') : null);
+    if (!fileBlob) { alert('No file loaded.'); return; }
+    fd.append('file', fileBlob);
+  }
+
+  try {
+    const response = await fetch('/run_benchmark', { method: 'POST', body: fd });
+    const ct = response.headers.get('content-type') || '';
+    if (ct.includes('application/json')) {
+      const err = await response.json();
+      alert('Error: ' + (err.error || 'Unknown error'));
+      showState('welcome');
+      return;
+    }
+    // Stream SSE
+    const reader  = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const parts = buffer.split('\n\n');
+      buffer = parts.pop();
+      for (const part of parts) {
+        const line = part.split('\n').find(l => l.startsWith('data: '));
+        if (!line) continue;
+        try { handleSSEEvent(JSON.parse(line.slice(6))); }
+        catch (e) { console.error('SSE parse error:', e, line); }
+      }
+    }
+  } catch (e) {
+    alert('Network error: ' + e.message);
+    showState('welcome');
+  } finally {
+    document.getElementById('run-spinner').style.display = 'none';
+    document.getElementById('run-label').textContent = '▶ Run Benchmark';
+    updateRunButton();
+  }
+}
+
+// ── DEVICE TOGGLE ─────────────────────────────────────────────────────────────
+function setDevice(d) {
+  selectedDevice = d;
+  document.querySelectorAll('#device-toggle .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.device === d);
+  });
+}
+
+// ── THEME TOGGLE ──────────────────────────────────────────────────────────────
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme') || 'dark';
+  const next    = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+  document.getElementById('theme-toggle').textContent = next === 'dark' ? '🌙' : '☀️';
+}
+// Sync toggle icon on load
+(function() {
+  const saved = document.documentElement.getAttribute('data-theme') || 'dark';
+  const btn = document.getElementById('theme-toggle');
+  if (btn) btn.textContent = saved === 'dark' ? '🌙' : '☀️';
+})();
+
+// ── SPLIT MODE ────────────────────────────────────────────────────────────────
+function setSplitMode(mode) {  splitMode = mode;
+  document.querySelectorAll('#split-mode-toggle .pill-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  document.getElementById('auto-upload-zone').classList.toggle('hidden', mode === 'presplit');
+  document.getElementById('presplit-upload-zone').classList.toggle('hidden', mode !== 'presplit');
+  // Hide sliders that don't apply in pre-split mode
+  const trRow = document.getElementById('settings-row-train-frac');
+  const nsRow = document.getElementById('settings-row-n-seeds');
+  if (trRow) trRow.style.display = mode === 'presplit' ? 'none' : '';
+  if (nsRow) nsRow.style.display = mode === 'presplit' ? 'none' : '';
+  // Reset all uploaded files
+  uploadedFile      = null;
+  exampleBlob       = null;
+  uploadedTrainFile = null;
+  uploadedTestFile  = null;
+  const tnEl = document.getElementById('train-file-name');
+  const ttEl = document.getElementById('test-file-name');
+  if (tnEl) tnEl.textContent = 'No file selected';
+  if (ttEl) ttEl.textContent = 'No file selected';
+  const dzt = document.getElementById('drop-zone-train');
+  const dze = document.getElementById('drop-zone-test');
+  if (dzt) dzt.classList.remove('has-file');
+  if (dze) dze.classList.remove('has-file');
+  updateRunButton();
+}
+
+// ── FEATURE SELECTION ─────────────────────────────────────────────────────────
+function buildFeatureList(columns, dtypes, targetCol) {
+  const features  = columns.filter(c => c !== targetCol);
+  const container = document.getElementById('feature-checks-container');
+  let html = '';
+  features.forEach(c => {
+    const dtype = dtypes[c] || '';
+    html += `<label class="feat-check-item">
+      <input type="checkbox" class="feat-check" value="${c}" checked onchange="updateFeatCount()">
+      <span class="feat-name" title="${c}">${c}</span>
+      <span class="feat-dtype">${dtype.slice(0, 7)}</span>
+    </label>`;
+  });
+  container.innerHTML = html;
+  updateFeatCount();
+  showSection('sec-features');
+}
+function updateFeatCount() {
+  const n = document.querySelectorAll('#feature-checks-container .feat-check:checked').length;
+  const t = document.querySelectorAll('#feature-checks-container .feat-check').length;
+  document.getElementById('feat-count-badge').textContent = `${n} / ${t} features`;
+}
+function getSelectedFeatures() {
+  return [...document.querySelectorAll('#feature-checks-container .feat-check:checked')]
+         .map(el => el.value);
+}
+function selectAllFeatures() {
+  document.querySelectorAll('#feature-checks-container .feat-check').forEach(e => e.checked = true);
+  updateFeatCount();
+}
+function deselectAllFeatures() {
+  document.querySelectorAll('#feature-checks-container .feat-check').forEach(e => e.checked = false);
+  updateFeatCount();
+}
+
+// ── SSE PROGRESS HELPERS ──────────────────────────────────────────────────────
+function initModelStatusCards(modelKeys) {
+  const grid = document.getElementById('model-status-grid');
+  let html = '';
+  modelKeys.forEach(k => {
+    const reg = MODEL_REGISTRY[k];
+    if (!reg) return;
+    html += `<div class="model-status-card" id="msc-${k}">
+      <span class="model-dot" style="background:${reg.color}"></span>
+      <span class="msc-name" title="${reg.name}">${reg.name}</span>
+      <span class="msc-status pending">wait</span>
+      <span class="msc-val"></span>
+    </div>`;
+  });
+  grid.innerHTML = html;
+}
+function updateModelStatus(modelKey, status, val) {
+  const card = document.getElementById('msc-' + modelKey);
+  if (!card) return;
+  const span = card.querySelector('.msc-status');
+  span.className = 'msc-status ' + status;
+  span.textContent = status === 'running' ? '▶' : status === 'done' ? '✓' : status === 'error' ? '✗' : status;
+  const valSpan = card.querySelector('.msc-val');
+  if (val != null && !isNaN(val)) valSpan.textContent = Number(val).toFixed(4);
+}
+function updateProgressBar(pct) {
+  const bar = document.getElementById('progress-bar');
+  if (!bar) return;
+  bar.classList.remove('indeterminate');
+  bar.style.width = pct + '%';
+}
+
+// ── SSE EVENT HANDLER ─────────────────────────────────────────────────────────
+function handleSSEEvent(event) {
+  switch (event.type) {
+    case 'progress':
+      document.getElementById('progress-line').textContent =
+        `Running ${event.model} (${event.done + 1}/${event.total})…`;
+      updateProgressBar((event.done / event.total) * 100);
+      updateModelStatus(event.model_key, 'running', null);
+      break;
+    case 'model_done':
+      updateModelStatus(event.model_key, 'done', event.primary_val);
+      updateProgressBar((event.done / event.total) * 100);
+      document.getElementById('progress-line').textContent =
+        `Completed ${event.name} (${event.done}/${event.total})`;
+      break;
+    case 'model_error':
+      updateModelStatus(event.model_key, 'error', null);
+      updateProgressBar((event.done / event.total) * 100);
+      break;
+    case 'done':
+      window.lastResults = event;
+      rerenderResults(event, true);
+      showState('results');
+      document.getElementById('run-spinner').style.display = 'none';
+      document.getElementById('run-label').textContent = '▶ Run Benchmark';
+      updateRunButton();
+      break;
+    case 'error':
+      alert('Error: ' + (event.message || 'Unknown error'));
+      showState('welcome');
+      document.getElementById('run-spinner').style.display = 'none';
+      document.getElementById('run-label').textContent = '▶ Run Benchmark';
+      updateRunButton();
+      break;
+  }
+}
+
+// ── STATE MACHINE ─────────────────────────────────────────────────────────────
+function showState(state) {
+  document.getElementById('welcome-state').style.display  = state === 'welcome'  ? '' : 'none';
+  document.getElementById('progress-state').style.display = state === 'progress' ? 'block' : 'none';
+  document.getElementById('results-state').style.display  = state === 'results'  ? 'block' : 'none';
+}
+
+// ── RENDER RESULTS ────────────────────────────────────────────────────────────
+function rerenderResults(data, resetTab) {
+  const task        = data.task;
+  const results     = data.results || [];
+  const barPlots    = data.bar_plots || {};
+  const primaryM    = data.primary_metric;
+  const metricList  = task === 'regression' ? REGRESSION_METRICS : CLASSIFICATION_METRICS;
+  const checkedMets = getCheckedMetrics();
+  const displayMets = metricList.filter(m => checkedMets.includes(m.key));
+
+  // (A) Stats row
+  renderStatsRow(data, results, primaryM, metricList);
+
+  // (B) Metric tabs
+  renderMetricTabs(displayMets, barPlots, primaryM, resetTab);
+
+  // (C) initial bar chart will be triggered by tab render
+
+  // (D) Leaderboard
+  renderLeaderboard(results, displayMets, activeMetric || primaryM);
+
+  // (E) Plot grid
+  renderPlotGrid(results, data, primaryM, metricList);
+
+  // (F) Profile
+  renderProfile(data.profile, task);
+}
+
+function renderStatsRow(data, results, primaryM, metricList) {
+  const pm_meta   = metricList.find(m => m.key === primaryM) || {};
+  const best      = results[0];
+  const pmVal     = best ? (best.metrics[primaryM] || {}) : {};
+  const fmtSpec   = pm_meta.fmt || '.3f';
+
+  function fmtNum(v) {
+    if (v == null || (typeof v === 'number' && isNaN(v))) return '—';
+    return Number(v).toFixed(parseInt(fmtSpec.slice(1)));
+  }
+
+  const famColor = FAMILY_COLORS[(best || {}).family] || '#888';
+  const bestRow  = best ? `
+    <span style="font-size:0.85rem">${best.name}</span>
+    <span class="fam-pill" style="background:${famColor}22;color:${famColor}">${best.family}</span>
+    ${best.is_proxy ? '<span class="proxy-badge">proxy</span>' : ''}
+  ` : '—';
+
+  const pmRow = pmVal.mean != null ? `
+    <span class="stat-value">${fmtNum(pmVal.mean)}</span>
+    <div class="stat-sub">± ${fmtNum(pmVal.std)} ${pm_meta.unit || ''}</div>
+  ` : '<span class="stat-value">—</span>';
+
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-card">
+      <div class="stat-label">Best Model</div>
+      <div>${bestRow}</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Best ${pm_meta.label || primaryM}</div>
+      ${pmRow}
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Dataset</div>
+      <span class="stat-value" style="font-size:0.85rem">${data.n_samples} × ${data.n_features}</span>
+      <div class="stat-sub">${
+        data.split_mode === 'presplit'
+          ? 'pre-split · fixed'
+          : `${Math.round(data.train_fraction*100)}% train · ${data.n_seeds} seed${data.n_seeds !== 1 ? 's' : ''}`
+      }</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Task</div>
+      <span class="stat-value" style="font-size:0.85rem;text-transform:capitalize">${data.task}</span>
+      <div class="stat-sub">→ ${data.target}</div>
+    </div>
+  `;
+}
+
+function renderMetricTabs(displayMets, barPlots, primaryM, resetTab) {
+  const container = document.getElementById('metric-tabs');
+  if (resetTab || !activeMetric || !displayMets.find(m => m.key === activeMetric)) {
+    activeMetric = displayMets.length ? displayMets[0].key : primaryM;
+  }
+
+  let html = '';
+  displayMets.forEach(m => {
+    html += `<button class="metric-tab ${m.key === activeMetric ? 'active' : ''}"
+               onclick="switchMetricTab('${m.key}')">${m.label}</button>`;
+  });
+  container.innerHTML = html;
+
+  // render initial chart
+  showBarChart(activeMetric, barPlots);
+}
+
+function switchMetricTab(metric) {
+  activeMetric = metric;
+  document.querySelectorAll('.metric-tab').forEach(btn => {
+    btn.classList.toggle('active', btn.textContent === (REGRESSION_METRICS.concat(CLASSIFICATION_METRICS)
+      .find(m => m.key === metric) || {}).label);
+  });
+  // Simpler: re-render tabs
+  if (window.lastResults) {
+    const task = window.lastResults.task;
+    const metricList = task === 'regression' ? REGRESSION_METRICS : CLASSIFICATION_METRICS;
+    const checkedMets = getCheckedMetrics();
+    const displayMets = metricList.filter(m => checkedMets.includes(m.key));
+    const container = document.getElementById('metric-tabs');
+    let html = '';
+    displayMets.forEach(m => {
+      html += `<button class="metric-tab ${m.key === metric ? 'active' : ''}"
+                 onclick="switchMetricTab('${m.key}')">${m.label}</button>`;
+    });
+    container.innerHTML = html;
+    showBarChart(metric, window.lastResults.bar_plots || {});
+    reHighlightLeaderboard(metric, window.lastResults.results || []);
+  }
+}
+
+function showBarChart(metric, barPlots) {
+  const panel = document.getElementById('chart-panel');
+  if (barPlots[metric]) {
+    panel.innerHTML = `<img src="data:image/png;base64,${barPlots[metric]}" alt="${metric} chart">`;
+  } else {
+    panel.innerHTML = `<div class="chart-placeholder">Chart not pre-generated for this metric.<br>
+      Charts are available for: ${Object.keys(barPlots).join(', ') || 'none'}.</div>`;
+  }
+}
+
+function renderLeaderboard(results, displayMets, highlightMetric) {
+  const metricList = window.lastResults
+    ? (window.lastResults.task === 'regression' ? REGRESSION_METRICS : CLASSIFICATION_METRICS)
+    : REGRESSION_METRICS;
+
+  let thead = '<thead><tr>';
+  thead += '<th>Rank</th><th>Model</th><th>Family</th>';
+  displayMets.forEach(m => {
+    const arrow = m.lower_better ? '↓' : '↑';
+    thead += `<th class="metric-col">${m.label} <span class="sort-arrow">${arrow}</span></th>`;
+  });
+  thead += '</tr></thead>';
+
+  let tbody = '<tbody>';
+  const rankColors = ['gold', 'silver', 'bronze'];
+  let hasMitra = false;
+  let hasProxy = false;
+
+  results.forEach((r, idx) => {
+    const rank = idx + 1;
+    const rankClass = rankColors[idx] || '';
+    const famColor  = FAMILY_COLORS[r.family] || '#888';
+    if (r.key === 'mitra') hasMitra = true;
+    if (r.is_proxy)        hasProxy  = true;
+
+    tbody += `<tr>`;
+    tbody += `<td><span class="rank-badge ${rankClass}">${rank}</span></td>`;
+    tbody += `<td>
+      <div class="model-name-cell">
+        <span class="model-dot" style="background:${r.color}"></span>
+        ${r.name}${r.key === 'mitra' ? '<sup style="color:var(--gold)">†</sup>' : ''}
+        ${r.is_proxy ? '<span class="proxy-badge">proxy</span>' : ''}
+      </div>
+    </td>`;
+    tbody += `<td><span class="fam-pill" style="background:${famColor}22;color:${famColor}">${r.family}</span></td>`;
+    displayMets.forEach(m => {
+      const mv = (r.metrics[m.key] || {});
+      const mean = mv.mean;
+      const std  = mv.std;
+      let cell = '—';
+      if (mean != null && !(typeof mean === 'number' && isNaN(mean))) {
+        const fmtSpec = m.fmt;
+        cell = Number(mean).toFixed(parseInt(fmtSpec.slice(1)));
+        if (std != null && !isNaN(std) && std > 0) {
+          cell += ' <small style="color:var(--text-lo)">±' + Number(std).toFixed(parseInt(fmtSpec.slice(1))) + '</small>';
+        }
+      }
+      const isBestCol = m.key === highlightMetric;
+      tbody += `<td class="metric-val ${isBestCol && idx === 0 ? 'val-best' : ''}" data-metric="${m.key}" data-rank="${idx}">${cell}</td>`;
+    });
+    tbody += '</tr>';
+  });
+  tbody += '</tbody>';
+
+  document.getElementById('lb-table').innerHTML = thead + tbody;
+
+  // Footnotes
+  let fn = '';
+  if (hasMitra) fn += '† Mitra is deterministic for N < 8,192; std = 0 by design.  ';
+  if (hasProxy) fn += '* Proxy = sklearn fallback (library not installed).';
+  document.getElementById('lb-footnote').textContent = fn;
+
+  // Re-highlight correct column
+  reHighlightLeaderboard(highlightMetric, results);
+}
+
+function reHighlightLeaderboard(metric, results) {
+  const metricList = window.lastResults
+    ? (window.lastResults.task === 'regression' ? REGRESSION_METRICS : CLASSIFICATION_METRICS)
+    : REGRESSION_METRICS;
+  const mm = metricList.find(m => m.key === metric);
+  if (!mm) return;
+
+  // Remove all highlights
+  document.querySelectorAll('.lb-table .metric-val').forEach(td => td.classList.remove('val-best'));
+
+  // Find best value for this metric
+  const lowerBetter = mm.lower_better;
+  let bestVal = lowerBetter ? Infinity : -Infinity;
+  results.forEach(r => {
+    const v = (r.metrics[metric] || {}).mean;
+    if (v != null && !isNaN(v)) {
+      bestVal = lowerBetter ? Math.min(bestVal, v) : Math.max(bestVal, v);
+    }
+  });
+
+  results.forEach((r, idx) => {
+    const v = (r.metrics[metric] || {}).mean;
+    if (v != null && !isNaN(v) && Math.abs(v - bestVal) < 1e-9) {
+      const cell = document.querySelector(`.lb-table td[data-metric="${metric}"][data-rank="${idx}"]`);
+      if (cell) cell.classList.add('val-best');
+    }
+  });
+}
+
+function renderPlotGrid(results, data, primaryM, metricList) {
+  const task    = data.task;
+  const plotKey = task === 'regression' ? 'scatter_plot' : 'confusion_matrix_plot';
+  const pm_meta = metricList.find(m => m.key === primaryM) || {};
+  const fmtSpec = pm_meta.fmt || '.3f';
+
+  document.getElementById('plot-grid-title').textContent =
+    task === 'regression' ? 'Predicted vs Actual (seed 0)' : 'Confusion Matrices (seed 0)';
+
+  let html = '';
+  results.forEach(r => {
+    const plotData = r[plotKey];
+    if (!plotData) return;
+    const pmVal = (r.metrics[primaryM] || {}).mean;
+    const pmStr = pmVal != null && !isNaN(pmVal)
+      ? Number(pmVal).toFixed(parseInt(fmtSpec.slice(1))) + ' ' + (pm_meta.unit || '')
+      : '';
+
+    html += `<div class="plot-card">
+      <img src="data:image/png;base64,${plotData}" alt="${r.name}">
+      <div class="plot-card-foot">
+        <span class="model-dot" style="background:${r.color}"></span>
+        <span class="plot-model-name">${r.name}</span>
+        <span class="plot-metric-val">${pm_meta.label || primaryM}: ${pmStr}</span>
+      </div>
+    </div>`;
+  });
+  document.getElementById('plot-grid').innerHTML = html || '<div style="color:var(--text-lo);font-size:0.72rem">No plots available.</div>';
+}
+
+function renderProfile(profile, task) {
+  if (!profile) return;
+  let html = '<div class="profile-stats">';
+  html += `<div class="pstat">Samples <strong>${profile.n_samples}</strong></div>`;
+  html += `<div class="pstat">Features <strong>${profile.n_features}</strong></div>`;
+  html += `<div class="pstat">Numerical <strong>${profile.n_numerical}</strong></div>`;
+  html += `<div class="pstat">Categorical <strong>${profile.n_categorical}</strong></div>`;
+  html += `<div class="pstat">Missing (pre-imputation) <strong>${profile.n_missing}</strong></div>`;
+
+  if (task === 'regression') {
+    html += `<div class="pstat">Target min <strong>${(profile.target_min||0).toFixed(3)}</strong></div>`;
+    html += `<div class="pstat">Target max <strong>${(profile.target_max||0).toFixed(3)}</strong></div>`;
+    html += `<div class="pstat">Target mean <strong>${(profile.target_mean||0).toFixed(3)}</strong></div>`;
+    html += `<div class="pstat">Target std <strong>${(profile.target_std||0).toFixed(3)}</strong></div>`;
+    html += `<div class="pstat">Target median <strong>${(profile.target_median||0).toFixed(3)}</strong></div>`;
+  } else if (profile.class_counts) {
+    html += '<div class="pstat" style="width:100%">Class balance: ';
+    Object.entries(profile.class_counts).forEach(([cls, cnt]) => {
+      html += `<strong>${cls}</strong>: ${cnt}  `;
+    });
+    html += '</div>';
+  }
+  html += '</div>';
+  document.getElementById('profile-body').innerHTML = html;
+}
+
+function toggleProfile() {
+  const hdr  = document.getElementById('profile-hdr');
+  const body = document.getElementById('profile-body');
+  const open = body.classList.toggle('open');
+  hdr.classList.toggle('open', open);
+  hdr.querySelector('.arrow').textContent = open ? '▼' : '▶';
+  hdr.querySelector('span:first-child').textContent = (open ? '▾' : '▸') + ' Dataset Profile';
+}
+
+// ── EXAMPLE DATASET FLOW ─────────────────────────────────────────────────────
+async function loadExample(type) {
+  try {
+    const res  = await fetch('/load_example', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ dataset: type }),
+    });
+    const data = await res.json();
+    if (data.error) { alert('Error: ' + data.error); return; }
+
+    // Create blob for later upload
+    exampleBlob  = new Blob([data.csv_data], { type: 'text/csv' });
+    uploadedFile = null;
+
+    // CUDA availability
+    cudaAvailable = data.cuda_available || false;
+    const devLabel = document.getElementById('device-detected-label');
+    if (devLabel) devLabel.textContent = cudaAvailable ? '(CUDA available)' : '(CPU only)';
+
+    const filename = type === 'regression' ? 'example_regression.csv' : 'example_classification.csv';
+    onColumnsLoaded(data, filename);
+
+    if (data.suggested_task) setTask(data.suggested_task, false);
+    if (data.suggested_target) {
+      document.getElementById('target-col').value = data.suggested_target;
+      buildFeatureList(data.columns, data.dtypes || {}, data.suggested_target);
+    }
+    updateRunButton();
+    renderMetricChecks();
+  } catch (e) {
+    alert('Error loading example: ' + e.message);
+  }
+}
+</script>
+</body>
+</html>
