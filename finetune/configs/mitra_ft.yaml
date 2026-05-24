@@ -1,0 +1,26 @@
+# Mitra (Tab2D) regression fine-tuning hyperparameters
+# Referenced by run_finetune_benchmark.py --config finetune/configs/mitra_ft.yaml
+# Fine-tuning method: _finetune_mitra_regression_turn_by_turn() in TabTune TuningManager
+# Defaults confirmed from TabTune tuning.py source code
+
+model_name: "Mitra"
+task_type: "regression"
+tuning_strategy: "finetune"
+finetune_mode: "turn_by_turn"
+
+device: "cuda"
+epochs: 5               # TabTune Mitra regression default: 5
+steps_per_epoch: 100    # TabTune default: 100
+support_size: 512       # TabTune default: 512 (context_size)
+query_size: 128         # TabTune default: 128
+learning_rate: 1.0e-5   # TabTune Mitra default: 1e-5
+lr: 1.0e-5              # alias for learning_rate (TuningManager checks both)
+weight_decay: 0.0       # TabTune Mitra regression default: 0.0
+clip_grad_norm: 1.0     # safe clipping
+seed: 0
+show_progress: true
+
+# Sweep grid — used when run_finetune_benchmark.py --sweep is passed
+sweep:
+  learning_rate: [1.0e-6, 5.0e-6, 1.0e-5, 5.0e-5]
+  epochs: [3, 5, 10]

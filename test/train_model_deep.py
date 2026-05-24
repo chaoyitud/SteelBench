@@ -23,7 +23,22 @@ if __name__ == '__main__':
         args.seed = seed    # update seed  
         set_seeds(args.seed)
         method = get_method(args.model_type)(args, info['task_type'] == 'regression')
-        method.fit(train_val_data, info)    
+        method.fit(train_val_data, info)
+
+        # ── Fine-tuned checkpoint loading (optional) ───────────────────────
+        if getattr(args, 'ft_checkpoint', None):
+            import sys as _sys
+            from pathlib import Path as _Path
+            _sys.path.insert(0, str(_Path(__file__).parent.parent))
+            from finetune.talent_ckpt_loader import load_ft_checkpoint
+            method = load_ft_checkpoint(
+                talent_method=method,
+                ckpt_dir=args.ft_checkpoint,
+                model_key=args.model_type + "_ft",
+                seed=seed,
+            )
+        # ── End checkpoint loading ─────────────────────────────────────────
+
         vl, vres, metric_name, predict_logits = method.predict(test_data, info, model_name=args.evaluate_option)
 
         loss_list.append(vl)

@@ -405,6 +405,12 @@ def get_deep_args():
     parser.add_argument('--model_path', type=str, default=default_args['model_path'])
     parser.add_argument('--use_float', action='store_true', default=False,
                         help='Whether to use float type for model and data (default: True)')
+    parser.add_argument(
+        '--ft_checkpoint', type=str, default=None,
+        help='Path to a TabTune fine-tuned checkpoint directory. '
+             'If given, loads weights before predict() without re-training. '
+             'fit() still runs to set up preprocessing and context arrays.'
+    )
     args = parser.parse_args()
 
     set_gpu(args.gpu)

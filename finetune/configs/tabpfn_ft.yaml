@@ -1,0 +1,38 @@
+# TabPFN v2 / TabPFN-3 regression fine-tuning hyperparameters
+# Referenced by run_finetune_benchmark.py --config finetune/configs/tabpfn_ft.yaml
+# Fine-tuning method: _finetune_tabpfn_regression_turn_by_turn()
+# LR grid grounded in: yandex-research/tabpfn-finetuning paper logspace(5e-6, 5e-4)
+
+model_name: "TabPFNv26"     # TabPFNv26RegressorWrapper -> _finetune_tabpfnv26_native_regressor
+task_type: "regression"
+tuning_strategy: "finetune"
+
+finetune_mode: "native"     # native uses FinetunedTabPFNRegressor (bar-distribution loss)
+device: "cuda"
+epochs: 30
+steps_per_epoch: 100        # not used by native mode (uses validation-based stopping)
+support_size: 512           # context size for turn_by_turn fallback
+query_size: 128             # query size for turn_by_turn fallback
+learning_rate: 1.0e-5
+weight_decay: 0.01
+clip_grad_norm: 1.0
+grad_clip_value: 1.0        # used by FinetunedTabPFNRegressor
+early_stopping: true
+early_stopping_patience: 8
+validation_split_ratio: 0.1
+n_finetune_ctx_plus_query_samples: 10000
+finetune_ctx_query_split_ratio: 0.2
+n_estimators_finetune: 2
+n_estimators_validation: 2
+n_estimators_final_inference: 8
+use_lr_scheduler: true
+use_activation_checkpointing: true
+random_state: 0
+seed: 0
+show_progress: true
+
+# Sweep grid — used when run_finetune_benchmark.py --sweep is passed
+sweep:
+  learning_rate: [5.0e-6, 1.0e-5, 5.0e-5, 1.0e-4, 5.0e-4]
+  epochs: [10, 20, 30]
+  support_size: [256, 512]
