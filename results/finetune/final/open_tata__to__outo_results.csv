@@ -1,0 +1,15 @@
+model_key,pool_tag,test_dataset,target,seed,smape,mae_mpa,r2,n_ft_samples,n_context,n_test,ft_epochs,ft_steps_per_epoch,ft_lr,ft_support_size,ft_query_size,ckpt_path,timestamp
+tabpfn3_ft,open_tata,outo_uts,uts,0,0.8257,5.5578,0.9009,19303,6578,4386,30,100,1e-06,512,128,,2026-05-25T00:55:34.504497
+limix_ft,open_tata,outo_uts,uts,0,0.8021,5.4064,0.9162,19303,6578,4386,3,100,5e-08,256,64,,2026-05-25T00:57:41.663605
+tabpfn3_ft,open_tata,outo_uts,uts,1,0.8257,5.5578,0.9009,19303,6578,4386,30,100,1e-06,512,128,,2026-05-25T01:02:56.758430
+limix_ft,open_tata,outo_uts,uts,1,0.8021,5.4064,0.9162,19303,6578,4386,3,100,5e-08,256,64,,2026-05-25T01:07:19.592855
+tabpfn3_ft,open_tata,outo_uts,uts,2,0.8257,5.5578,0.9009,19303,6578,4386,30,100,1e-06,512,128,,2026-05-25T01:10:15.112158
+limix_ft,open_tata,outo_uts,uts,2,0.8021,5.4064,0.9162,19303,6578,4386,3,100,5e-08,256,64,,2026-05-25T01:16:52.266561
+tabpfn3_ft,open_tata,outo_ys,ys,0,1.7434,7.2222,0.9761,19303,6578,4386,30,100,1e-06,512,128,,2026-05-25T01:17:38.342725
+tabpfn3_ft,open_tata,outo_ys,ys,1,1.7434,7.2222,0.9761,19303,6578,4386,30,100,1e-06,512,128,,2026-05-25T01:24:14.953882
+limix_ft,open_tata,outo_ys,ys,0,1.7297,7.1625,0.9793,19303,6578,4386,3,100,5e-08,256,64,,2026-05-25T01:26:12.161090
+tabpfn3_ft,open_tata,outo_ys,ys,2,1.7434,7.2222,0.9761,19303,6578,4386,30,100,1e-06,512,128,,2026-05-25T01:30:27.586607
+limix_ft,open_tata,outo_ys,ys,1,1.7297,7.1625,0.9793,19303,6578,4386,3,100,5e-08,256,64,,2026-05-25T01:35:18.936409
+limix_ft,open_tata,outo_ys,ys,2,1.7297,7.1625,0.9793,19303,6578,4386,3,100,5e-08,256,64,,2026-05-25T01:44:07.176445
+tabpfn2_talent_ft,open_tata,outo_uts,uts,0,1.01497529,,,,6578,4386,30,100,1e-06,512,128,results_model/finetune/open_tata/tabpfn2_talent_ft/best,2026-05-25T11:24:24.223427
+tabpfn2_talent_ft,open_tata,outo_ys,ys,0,1.83462683,,,,6578,4386,30,100,1e-06,512,128,results_model/finetune/open_tata/tabpfn2_talent_ft/best,2026-05-25T11:24:24.223427

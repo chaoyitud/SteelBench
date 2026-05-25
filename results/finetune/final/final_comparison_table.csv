@@ -1,0 +1,13 @@
+model,direction,target,smape_ft,smape_zs,ft_delta%,a3b3_smape,a3b3_zs_rs70,a3b3_delta%,n_seeds
+limix_ft,A (tata→outo),uts,0.8021,0.822,-2.4,0.7814,0.7807,0.1,3
+limix_ft,A (tata→outo),ys,1.7297,1.7306,-0.1,1.6383,1.6365,0.1,3
+limix_ft,B (outo→tata),uts,1.2893,1.3307,-3.1,1.2404,1.2411,-0.1,3
+limix_ft,B (outo→tata),ys,3.852,3.9148,-1.6,3.8098,3.8099,-0.0,3
+tabpfn2_talent_ft,A (tata→outo),uts,1.015,1.0304,-1.5,0.9839,0.9977,-1.4,1
+tabpfn2_talent_ft,A (tata→outo),ys,1.8346,1.8814,-2.5,1.6811,1.7271,-2.7,1
+tabpfn2_talent_ft,B (outo→tata),uts,1.3294,1.3606,-2.3,1.259,1.2579,0.1,3
+tabpfn2_talent_ft,B (outo→tata),ys,4.0364,4.0566,-0.5,3.943,3.949,-0.2,3
+tabpfn3_ft,A (tata→outo),uts,0.8257,0.8557,-3.5,0.8047,0.7942,1.3,3
+tabpfn3_ft,A (tata→outo),ys,1.7434,1.7957,-2.9,1.6189,1.609,0.6,3
+tabpfn3_ft,B (outo→tata),uts,1.2786,1.3107,-2.4,1.2372,1.2309,0.5,3
+tabpfn3_ft,B (outo→tata),ys,3.8843,3.9592,-1.9,3.805,3.7902,0.4,3

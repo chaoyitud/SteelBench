@@ -26,6 +26,7 @@ n_estimators_finetune: 2
 n_estimators_validation: 2
 n_estimators_final_inference: 8
 use_lr_scheduler: true
+use_lr_schedule: false          # native scheduler used by FinetunedTabPFNRegressor
 use_activation_checkpointing: true
 random_state: 0
 seed: 0

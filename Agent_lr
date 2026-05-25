@@ -1,0 +1,41 @@
+Choose The Contribution Type You Are Using For Your Review: Applied/Systems
+Justify The Above Choice:
+I agree.
+
+Paper Summary:
+The authors propose SEED, a dual-branch framework that combines two complementary sources of evidence. The first branch uses an instruction-tuned MLLM to generate anomaly-focused textual descriptions, aiming to capture higher-level cues such as perceptual implausibility, commonsense violations, and physical inconsistency. These generated descriptions are then encoded into explicit semantic features. The second branch is a vision-only forensic expert that combines a VIB-based visual encoder with a frequency-domain module to capture residual low-level traces. The two branches are fused for final classification.
+
+Paper Strengths:
+Motivation is clear.
+The method is reasonably interpretable. The qualitative examples show that the MLLM is not just producing generic captions, but anomaly-centered descriptions tied to anatomy, object relations, and physical plausibility.
+Major Weaknesses:
+This is a clarity issue. Page 7’s Figure 3 suggests the MLLM, BERT, and VIB encoder are frozen, while some modules are optimized. But Section 4.3 describes optimizing the VIB branch with a VIB loss, and Section 5.1 says only the “final linear classification layer” is trained under the few-shot setting. Elsewhere, the method says a lightweight MLP classifier is trained, not necessarily a linear layer.
+
+The paper lacks a proper ablation study. Although the method consists of multiple important components, the paper does not isolate their individual contributions. The experiments mainly focus on overall performance, robustness, and qualitative examples, but do not evaluate variants such as removing the semantic branch or using only visual features. As a result, it is unclear which component drives the reported improvements, and whether the gains truly come from the proposed semantic externalization or from other factors in the pipeline
+
+The paper does not evaluate on partially forged images. All experiments focus on whole-image real vs. generated classification, whereas many real-world scenarios involve localized manipulations (e.g., splicing, inpainting, or object-level edits).
+
+Writing and reference are unclear; see minor weakness.
+
+Minor Weaknesses:
+Section 4.4 says the VIB branch is regularized by the VIB objective in Eq. (8), but Eq. (8) is the visual-feature concatenation equation. The VIB objective is Eq. (5).
+
+Eq. (12) defines the total loss as CE + λLVIB, but LVIB already contains a CE term in Eq. (5). The paper should clarify whether there are separate classifier losses for the fusion head and VIB head.
+
+The paper alternates between “MLP classifier,” “linear classifier,” and “final linear classification layer.” These should be made consistent.
+
+Table 2 lists “CNNDtect” instead of “CNNDetect.”
+
+FIRE is described as CVPR 2025 in the baseline list but appears as CVPR 2024 in the references. VIB appears as both [29] and [30] with inconsistent years.
+
+The paper uses names like “AIGi-Holmes,” “AIGI-Holmes,” “SD35-L,” “SD3.5-L,” “BLIP3-8B,” and “BLIP-3o-8B.” These should be consistent. And the model name is not clearly refered, for example, FLUX is not a single model.
+
+Preliminary Recommendation: 2: Weak Reject
+Justification Of Preliminary Recommendation:
+The score is limited by weaknesses in system validation and clarity. Key implementation details are missing, and it is unclear which components are trained vs. frozen, affecting reproducibility. The evaluation lacks sufficient ablations to justify that the system design (especially the semantic branch) is the true source of gains. And the writing and reference are unclear.
+
+Suggestions For Rebuttal:
+More ablations.
+Clearer writing.
+Ethics Review Flag: No
+Confidence Level: 3: Moderate Confidence - The reviewer is reasonably knowledgeable about the topic. They understand the paper's methodology and results but may not be a leading expert in the specific subfield.

@@ -17,6 +17,7 @@ learning_rate: 1.0e-5   # TabTune Mitra default: 1e-5
 lr: 1.0e-5              # alias for learning_rate (TuningManager checks both)
 weight_decay: 0.0       # TabTune Mitra regression default: 0.0
 clip_grad_norm: 1.0     # safe clipping
+use_lr_schedule: true   # cosine warmup schedule in TuningManager
 seed: 0
 show_progress: true
 

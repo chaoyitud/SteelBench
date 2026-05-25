@@ -190,6 +190,10 @@ class FineTunedTFM:
         y_pool: np.ndarray,
         seed: int = 0,
         ckpt_dir: Optional[str] = None,
+        X_val: Optional[np.ndarray] = None,
+        y_val: Optional[np.ndarray] = None,
+        X_ctx: Optional[np.ndarray] = None,
+        y_ctx: Optional[np.ndarray] = None,
     ) -> None:
         """
         Run the TabTune fine-tuning loop.
@@ -205,6 +209,17 @@ class FineTunedTFM:
         ckpt_dir : str | None
             If given, saves fine-tuned checkpoint to
             {ckpt_dir}/{model_key}/seed_{seed}.pt
+        X_val : float64 ndarray, shape (n_val, F_test) | None
+            Val features from the held-out test dataset (original scale).
+            Must be paired with X_ctx (same feature space).
+        y_val : float64 ndarray, shape (n_val,) | None
+            Val targets in original MPa units.
+        X_ctx : float64 ndarray, shape (n_train, F_test) | None
+            Train-split features from the held-out test dataset.
+            Used as in-context support for per-epoch val SMAPE (same feature
+            space as X_val, different from X_pool which uses pool features).
+        y_ctx : float64 ndarray, shape (n_train,) | None
+            Train-split targets in original MPa units.
         """
         (
             TuningManager,
@@ -242,6 +257,16 @@ class FineTunedTFM:
         for k in _int_keys:
             if k in params and isinstance(params[k], str):
                 params[k] = int(params[k])
+
+        # Thread val arrays for per-epoch W&B logging (used by tuning.py if a run is active)
+        # _wb_ctx_* = train split of the HELD-OUT dataset (same feature space as val)
+        # _wb_val_* = val split of the held-out dataset
+        if X_val is not None and y_val is not None:
+            params["_wb_val_X"] = np.asarray(X_val, dtype=np.float32)
+            params["_wb_val_y"] = np.asarray(y_val, dtype=np.float64)
+        if X_ctx is not None and y_ctx is not None:
+            params["_wb_ctx_X"] = np.asarray(X_ctx, dtype=np.float32)
+            params["_wb_ctx_y"] = np.asarray(y_ctx, dtype=np.float64)
 
         tm = TuningManager()
         self._model = tm.tune(

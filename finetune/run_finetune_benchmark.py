@@ -135,7 +135,7 @@ def smape(y_true: np.ndarray, y_pred: np.ndarray) -> float:
 
 def load_test_dataset(
     logical_name: str, data_dir: Path
-) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """
     Load held-out test dataset in TALENT format.
 
@@ -145,6 +145,8 @@ def load_test_dataset(
     y_context : shape (n_train + n_val,)
     X_test    : shape (n_test, F)
     y_test    : shape (n_test,)  — original MPa values
+    X_val     : shape (n_val, F)  — val split only (for per-epoch W&B monitoring)
+    y_val     : shape (n_val,)    — original MPa values
     """
     folder_name = DATASET_PATH_MAP[logical_name]
     folder = data_dir / folder_name
@@ -158,20 +160,23 @@ def load_test_dataset(
                 f"  Logical name: {logical_name}  |  Folder: {folder}"
             )
 
+    X_val = np.load(folder / "N_val.npy").astype(np.float64)
+    y_val = np.load(folder / "y_val.npy").astype(np.float64)  # original MPa
+
     X_context = np.vstack([
         np.load(folder / "N_train.npy"),
-        np.load(folder / "N_val.npy"),
+        X_val,
     ]).astype(np.float64)
 
     y_context = np.concatenate([
         np.load(folder / "y_train.npy"),
-        np.load(folder / "y_val.npy"),
+        y_val,
     ]).astype(np.float64)
 
     X_test = np.load(folder / "N_test.npy").astype(np.float64)
     y_test = np.load(folder / "y_test.npy").astype(np.float64)   # original MPa
 
-    return X_context, y_context, X_test, y_test
+    return X_context, y_context, X_test, y_test, X_val, y_val
 
 
 def load_pool(pool_dir: Path) -> tuple[np.ndarray, np.ndarray, dict]:
@@ -296,6 +301,8 @@ def run_single(
     load_ckpt: bool = False,
     ckpt_dir: Optional[str] = None,
     config_path: Path = None,
+    wandb_project: Optional[str] = None,
+    wandb_entity: Optional[str] = None,
 ) -> None:
     """Run one fine-tuning + evaluation trial."""
 
@@ -316,7 +323,7 @@ def run_single(
     _set_seeds(seed)
 
     # ---- 2. Load held-out test dataset ----------------------------------
-    X_context, y_context, X_test, y_test = load_test_dataset(test_ds, data_dir)
+    X_context, y_context, X_test, y_test, X_val, y_val = load_test_dataset(test_ds, data_dir)
 
     # ---- 3. Build / load checkpoint path --------------------------------
     ckpt_path_str = ""
@@ -325,8 +332,47 @@ def run_single(
             ckpt_dir, model_key, f"{pool_tag}_seed_{seed}.pt"
         )
 
+    # ---- 3b. W&B init (before fit so per-epoch callbacks can log) -------
+    if wandb_project and not load_ckpt:
+        try:
+            import wandb as _wandb
+            lr_val = float(config.get("learning_rate", config.get("lr", 0)))
+            run_name = (
+                f"{model_key}__{pool_tag}__{test_ds}"
+                f"__lr{lr_val:.0e}__s{seed}"
+            )
+            _wandb.init(
+                project=wandb_project,
+                entity=wandb_entity,
+                name=run_name,
+                config={
+                    "model_key":          model_key,
+                    "pool_tag":           pool_tag,
+                    "test_dataset":       test_ds,
+                    "seed":               seed,
+                    "ft_lr":              lr_val,
+                    "ft_epochs":          int(config.get("epochs", 0)),
+                    "ft_steps_per_epoch": int(config.get("steps_per_epoch", 0)),
+                    "ft_support_size":    int(config.get("support_size", 0)),
+                    "ft_query_size":      int(config.get("query_size", 0)),
+                    "n_ft_samples":       int(len(X_pool)),
+                    "n_context":          int(len(X_context)),
+                    "n_test":             int(len(X_test)),
+                },
+                tags=[model_key, pool_tag, test_ds],
+                reinit=True,
+            )
+            logger.info(f"  [W&B] Run '{run_name}' initialised in project '{wandb_project}'")
+        except Exception as _wb_init_exc:
+            logger.warning(f"  [W&B] Init failed: {_wb_init_exc}")
+
     # ---- 4. Fine-tune or load checkpoint --------------------------------
     tfm = FineTunedTFM(model_key, config_path)
+
+    # Compute ctx = train split of held-out dataset (same feature space as val)
+    n_val = len(X_val)
+    X_ctx = X_context[:-n_val]  # N_train, shape (n_train, F_test)
+    y_ctx = y_context[:-n_val]  # y_train in MPa, shape (n_train,)
 
     if load_ckpt:
         if not ckpt_path_str:
@@ -336,7 +382,8 @@ def run_single(
     else:
         logger.info(f"  Fine-tuning on pool={pool_tag}, N={len(X_pool)}, seed={seed}")
         ckpt_save_dir = ckpt_dir or None
-        tfm.fit(X_pool, y_pool, seed=seed, ckpt_dir=ckpt_save_dir)
+        tfm.fit(X_pool, y_pool, seed=seed, ckpt_dir=ckpt_save_dir,
+                X_val=X_val, y_val=y_val, X_ctx=X_ctx, y_ctx=y_ctx)
         if ckpt_dir:
             # Rename to stable pool-tagged name
             default_path = os.path.join(ckpt_dir, model_key, f"seed_{seed}.pt")
@@ -406,6 +453,21 @@ def run_single(
         logger.info(f"  [CheckpointStore] Saved → {_ckpt_saved}")
     except Exception as _ckpt_exc:
         logger.warning(f"  [CheckpointStore] Save failed: {_ckpt_exc}")
+
+    # ---- 6c. W&B — log final eval metrics and close run -------------------
+    if wandb_project and not load_ckpt:
+        try:
+            import wandb as _wandb
+            if _wandb.run is not None:
+                _wandb.log({
+                    "smape":   smape_val,
+                    "mae_mpa": mae_val,
+                    "r2":      r2_val,
+                })
+                _wandb.finish()
+                logger.info(f"  [W&B] Final metrics logged and run closed.")
+        except Exception as _wb_exc:
+            logger.warning(f"  [W&B] Final log failed: {_wb_exc}")
 
     # ---- 7. Build result row --------------------------------------------
     row = {
@@ -514,6 +576,35 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Directory to save/load model checkpoints.",
     )
+    p.add_argument(
+        "--override_lr",
+        type=float,
+        default=None,
+        help="Override lr/learning_rate in YAML config (e.g. 1e-7 for LR sweep).",
+    )
+    p.add_argument(
+        "--override_epochs",
+        type=int,
+        default=None,
+        help="Override epochs in YAML config (e.g. 10 for faster sweep runs).",
+    )
+    p.add_argument(
+        "--wandb",
+        action="store_true",
+        help="Enable Weights & Biases logging.",
+    )
+    p.add_argument(
+        "--wandb_project",
+        type=str,
+        default="steelbench-finetune",
+        help="W&B project name (default: steelbench-finetune).",
+    )
+    p.add_argument(
+        "--wandb_entity",
+        type=str,
+        default=None,
+        help="W&B entity (team/user). Defaults to the logged-in user.",
+    )
     return p.parse_args()
 
 
@@ -551,6 +642,21 @@ def main() -> None:
         base_config = load_config(config_dir, model_key)
         base_config["device"] = args.device
 
+        # --override_lr: patch both lr and learning_rate keys
+        if args.override_lr is not None:
+            base_config["lr"] = args.override_lr
+            base_config["learning_rate"] = args.override_lr
+            logger.info(
+                f"[override_lr] {model_key}: lr={args.override_lr}"
+            )
+
+        # --override_epochs: patch epochs key
+        if args.override_epochs is not None:
+            base_config["epochs"] = args.override_epochs
+            logger.info(
+                f"[override_epochs] {model_key}: epochs={args.override_epochs}"
+            )
+
         configs_to_run = sweep_configs(base_config) if args.sweep else [base_config]
 
         config_path = config_dir / f"{MODEL_KEY_TO_CONFIG_STEM[model_key]}.yaml"
@@ -581,6 +687,8 @@ def main() -> None:
                             load_ckpt=args.load_ckpt,
                             ckpt_dir=ckpt_dir,
                             config_path=config_path,
+                            wandb_project=args.wandb_project if args.wandb else None,
+                            wandb_entity=args.wandb_entity if args.wandb else None,
                         )
                     except Exception as exc:
                         logger.error(
